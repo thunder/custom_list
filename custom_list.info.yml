@@ -1,0 +1,8 @@
+name: 'Custom list'
+type: module
+description: 'Insert a specific block or a selected entity in defined positions of a view. This module does not provide functionality on its own, it is only scaffolding for other modules.'
+package: Core
+version: VERSION
+core: 8.x
+dependencies:
+  - views
