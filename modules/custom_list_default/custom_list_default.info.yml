@@ -1,0 +1,7 @@
+name: 'Custom list (Default)'
+type: module
+description: 'Insert specific block or custom entity in dedicated positions of default content view.'
+package: Layout
+core: 8.x
+dependencies:
+  - custom_list:custom_list

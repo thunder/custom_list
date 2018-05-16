@@ -4,4 +4,4 @@ description: 'Insert a specific block or a selected entity in defined positions 
 package: Layout
 core: 8.x
 dependencies:
-  - views
+  - drupal:views

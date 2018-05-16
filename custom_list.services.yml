@@ -1,0 +1,4 @@
+services:
+  custom_list.unique_entities_store:
+    class: Drupal\custom_list\UniqueEntitiesStorage
+    arguments: []
