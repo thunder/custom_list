@@ -1,0 +1,27 @@
+.custom-list__insertion-list-form {
+  margin-bottom: 5px;
+}
+
+.custom-list__insertion-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin-left: 0;
+}
+
+.custom-list__insertion-row {
+  background-color: lightgray;
+  border: 1px solid gray;
+  display: flex;
+  flex-direction: row;
+}
+
+.custom-list__insertion-row > div {
+  flex-grow: 1;
+}
+
+.custom-list__insertion-row__edit-position,
+.custom-list__insertion-row__edit-view-mode {
+  display: block;
+  position: absolute;
+  z-index: 1001;
+}

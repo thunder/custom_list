@@ -30,40 +30,50 @@ abstract class CustomListBase extends BlockBase {
   }
 
   /**
-   * Get custom list insert configuration.
+   * Provides form for adding inserts.
    *
-   * TODO: Use Entity Browser for this or some other way to select!
+   * @param array $selection
+   *   Existing selection of entities.
    *
    * @return array
-   *   Insert configuration.
+   *   Returns form elements.
    */
-  protected function getInsertionConfig() {
-    return [
-      [
-        // 1.
-        'position' => 0,
-        'type' => 'entity',
-        'config' => [
-          'type' => 'node',
-          'view_mode' => 'default',
-          'id' => '2',
+  protected function getInsertsForm(array $selection) {
+    $inserts_form = [];
+
+    $inserts_form['insert_selection'] = [
+      '#type' => 'hidden',
+      '#default_value' => json_encode($selection),
+      '#attached' => [
+        'library' => [
+          'custom_list/insert_selector',
         ],
       ],
-      [
-        // 3.
-        'position' => 2,
-        'type' => 'block',
-        'config' => [
-          'type' => 'search_form_block',
-          'config' => [
-            'id' => 'block_list_search_form_block',
-            'label' => 'Test View based solution -> Block',
-            'provider' => 'search',
-            'label_display' => 'visible',
-          ],
-        ],
+      '#attributes' => [
+        'data-entity-browser' => 'entity_browser_selector',
       ],
     ];
+
+    // TODO: configurable entity browsers - in some way!
+    $inserts_form['entity_browser_selector'] = [
+      '#type' => 'entity_browser',
+      '#entity_browser' => 'try_for_custom_list',
+    ];
+
+    return $inserts_form;
+  }
+
+  /**
+   * Extract values from insert selection form.
+   *
+   * @param array $insert_form_values
+   *   Insert selection form values.
+   *
+   * @return array
+   *   Returns insert selection list.
+   */
+  protected function fetchInsertSelection(array $insert_form_values) {
+    return json_decode($insert_form_values['insert_selection'], TRUE);
   }
 
   /**

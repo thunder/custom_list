@@ -1,0 +1,10 @@
+insert_selector:
+  js:
+    js/custom-list-base.js: {}
+    js/models/InsertionModel.js: {}
+    js/views/InsertionList.js: {}
+    js/views/InsertionForm.js: {}
+    js/custom-list-insert-selector.js: {}
+  css:
+    component:
+      css/custom-list-insert-selector.css: {}

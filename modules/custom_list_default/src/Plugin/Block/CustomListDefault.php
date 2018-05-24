@@ -35,7 +35,7 @@ class CustomListDefault extends CustomListBase {
 
     // Form should be pre-filled with existing configuration.
     $config = $this->getConfiguration();
-    $custom_list_config = $config['custom_list_config'] ?: [];
+    $custom_list_config = (!empty($config['custom_list_config'])) ? $config['custom_list_config'] : [];
 
     // Sub-form will be created for custom list form.
     $custom_list_config_form = [];
@@ -44,7 +44,7 @@ class CustomListDefault extends CustomListBase {
       '#type' => 'select',
       '#title' => $this->t('Content'),
       '#options' => $this->getContentOptions(),
-      '#default_value' => $custom_list_config['content'] ?: 'node:article',
+      '#default_value' => (!empty($custom_list_config['content'])) ? $custom_list_config['content'] : 'node:article',
     ];
 
     // TODO: has to be fetched over Ajax!!!
@@ -55,7 +55,7 @@ class CustomListDefault extends CustomListBase {
         'default' => $this->t('Default'),
         'teaser' => $this->t('Teaser'),
       ],
-      '#default_value' => $custom_list_config['view_mode'] ?: 'teaser',
+      '#default_value' => (!empty($custom_list_config['view_mode'])) ? $custom_list_config['view_mode'] : 'teaser',
     ];
 
     // TODO: Sorting options should be more powerful!
@@ -66,16 +66,17 @@ class CustomListDefault extends CustomListBase {
         'DESC' => $this->t('DESC'),
         'ASC' => $this->t('ASC'),
       ],
-      '#default_value' => $custom_list_config['sort'] ?: 'DESC',
+      '#default_value' => (!empty($custom_list_config['sort'])) ? $custom_list_config['sort'] : 'DESC',
     ];
 
     // Number of elements that will be displayed.
     $custom_list_config_form['limit'] = [
       '#type' => 'number',
       '#title' => $this->t('Limit'),
-      '#default_value' => $custom_list_config['limit'] ?: 5,
+      '#default_value' => (!empty($custom_list_config['limit'])) ? $custom_list_config['limit'] : 5,
     ];
 
+    $custom_list_config_form['insertion_form'] = $this->getInsertsForm((!empty($config['inserts'])) ? $config['inserts'] : []);
     $form['custom_list_config_form'] = $custom_list_config_form;
 
     return $form;
@@ -129,7 +130,8 @@ class CustomListDefault extends CustomListBase {
     $config = $this->getConfiguration();
     $config['custom_list_config'] = $custom_list_config;
     $config['entity_type_config'] = $entity_type_config;
-    $config['inserts'] = $this->getInsertionConfig();
+
+    $config['inserts'] = $this->fetchInsertSelection($custom_list_config['insertion_form']);
 
     $this->setConfiguration($config);
   }
