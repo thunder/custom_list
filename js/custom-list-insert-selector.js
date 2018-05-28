@@ -39,6 +39,18 @@
             });
           });
         });
+
+        var $addButton = $('[data-drupal-selector="edit-settings-custom-list-config-form-insertion-form-add-block"]');
+        $addButton.on('custom_list_add_block', function (event, data) {
+          form.collection.create({
+            position: form.collection.length,
+            type: 'block',
+            config: {
+              type: data.id,
+              config: data
+            }
+          });
+        });
       }
     }
   };

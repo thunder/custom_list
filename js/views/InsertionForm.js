@@ -10,6 +10,12 @@
     template: _.template(
       '<div class="custom-list__insertion-form">' +
       '  <div>' + Drupal.t('Insertion List') + '</div>' +
+      '  <div class="custom-list__insertion-form__header">' +
+      '    <div>' + Drupal.t('Position') + '</div>' +
+      '    <div>' + Drupal.t('Type (ID)') + '</div>' +
+      '    <div>' + Drupal.t('View mode') + '</div>' +
+      '    <div>' + Drupal.t('Actions') + '</div>' +
+      '  </div>' +
       '  <ul class="custom-list__insertion-list"></ul>' +
       '</div>'
     ),

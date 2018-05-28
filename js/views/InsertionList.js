@@ -10,13 +10,20 @@
     tagName: 'li',
     template: _.template(
       '<div class="custom-list__insertion-row">' +
-      '  <div class="custom-list__insertion-row__position"><%- position+1 %></div>' +
-      '  <div><%- config.name %></div>' +
-      '  <div class="custom-list__insertion-row__view-mode"><%- config.view_mode %></div>' +
-      '  <a class="custom-list__insertion-row__remove">' + Drupal.t('Remove') + '</a>' +
+      '  <% if (type === "entity") { %>' +
+      '    <div class="custom-list__insertion-row__position"><%- position+1 %></div>' +
+      '    <div><%- config.name %></div>' +
+      '    <div class="custom-list__insertion-row__view-mode"><%- config.view_mode %></div>' +
+      '    <div><a class="custom-list__insertion-row__remove">' + Drupal.t('Remove') + '</a></div>' +
+      '    <input class="custom-list__insertion-row__edit-view-mode" style="display: none;" type="text" value="<%- config.view_mode %>" />' +
+      '  <% } else { %>' +
+      '    <div class="custom-list__insertion-row__position"><%- position+1 %></div>' +
+      '    <div><%- config.config.label %>&nbsp;(<%- config.config.provider %>)</div>' +
+      '    <div class="custom-list__insertion-row__view-mode">-</div>' +
+      '    <div><a class="custom-list__insertion-row__remove">' + Drupal.t('Remove') + '</a></div>' +
+      '  <% } %>' +
       '</div>' +
-      '<input class="custom-list__insertion-row__edit-position" style="display: none;" type="text" value="<%- position+1 %>" />' +
-      '<input class="custom-list__insertion-row__edit-view-mode" style="display: none;" type="text" value="<%- config.view_mode %>" />'
+      '<input class="custom-list__insertion-row__edit-position" style="display: none;" type="text" value="<%- position+1 %>" />'
     ),
 
     events: {
@@ -57,7 +64,7 @@
 
       var cssConfig = $target.position();
       cssConfig.top = cssConfig.top - 1;
-      cssConfig.width = $target.width() - 7;
+      cssConfig.width = $target.width();
       cssConfig.height = $target.height() + 2;
 
       this.inputPosition.css(cssConfig).show().focus().select();
@@ -68,7 +75,7 @@
 
       var cssConfig = $target.position();
       cssConfig.top = cssConfig.top - 1;
-      cssConfig.width = $target.width() - 7;
+      cssConfig.width = $target.width();
       cssConfig.height = $target.height() + 2;
 
       this.inputViewMode.css(cssConfig).show().focus().select();

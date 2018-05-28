@@ -8,3 +8,9 @@ insert_selector:
   css:
     component:
       css/custom-list-insert-selector.css: {}
+
+add_block:
+  js:
+    js/custom-list-add-block.js: {}
+  dependencies:
+    - core/drupal.ajax

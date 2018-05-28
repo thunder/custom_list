@@ -2,7 +2,9 @@
 
 namespace Drupal\custom_list\Plugin\Block;
 
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Url;
 use Drupal\views\Entity\View;
 
 /**
@@ -58,6 +60,24 @@ abstract class CustomListBase extends BlockBase {
     $inserts_form['entity_browser_selector'] = [
       '#type' => 'entity_browser',
       '#entity_browser' => 'try_for_custom_list',
+    ];
+
+    $inserts_form['add_block'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Add insertion block'),
+      '#url' => Url::fromRoute('custom_list.add_block_list'),
+      '#attributes' => [
+        'class' => ['use-ajax', 'button', 'custom-list__add_block__button'],
+        'data-dialog-type' => 'modal',
+        'data-dialog-options' => Json::encode([
+          'width' => 700,
+        ]),
+      ],
+      '#attached' => [
+        'library' => [
+          'custom_list/add_block',
+        ],
+      ],
     ];
 
     return $inserts_form;
