@@ -59,7 +59,7 @@ abstract class CustomListBase extends BlockBase {
     // TODO: configurable entity browsers - in some way!
     $inserts_form['entity_browser_selector'] = [
       '#type' => 'entity_browser',
-      '#entity_browser' => 'try_for_custom_list',
+      '#entity_browser' => 'custom_list_articles',
     ];
 
     $inserts_form['add_block'] = [
