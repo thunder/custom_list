@@ -1,0 +1,14 @@
+custom_list.add_block_list:
+  path: '/custom_list/block/add_block_list'
+  defaults:
+    _controller: '\Drupal\custom_list\Controller\BlockListController::listBlocks'
+    _title: 'Add block'
+  requirements:
+    _permission: 'administer blocks'
+
+custom_list.add_block:
+  path: '/custom_list/block/add_block/{plugin_id}'
+  defaults:
+    _form: '\Drupal\custom_list\Form\AddBlockForm'
+  requirements:
+    _permission: 'administer blocks'

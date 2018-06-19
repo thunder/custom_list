@@ -80,13 +80,13 @@ class CustomListSearchApi extends CustomListBase {
 
     // Form should be pre-filled with existing configuration.
     $config = $this->getConfiguration();
-    $custom_list_config = $config['custom_list_config'] ?: [];
+    $custom_list_config = (!empty($config['custom_list_config'])) ? $config['custom_list_config'] : [];
 
     // Sub-form will be created for custom list form.
     $custom_list_config_form = [];
 
     $list_of_indexes = $this->getListOfIndexes();
-    $select_index = $custom_list_config['index'] ?: key($list_of_indexes);
+    $select_index = (!empty($custom_list_config['index'])) ? $custom_list_config['index'] : key($list_of_indexes);
     $custom_list_config_form['search_index'] = [
       '#type' => 'select',
       '#title' => $this->t('Search API Index'),
@@ -99,16 +99,17 @@ class CustomListSearchApi extends CustomListBase {
       '#type' => 'select',
       '#title' => $this->t('View mode'),
       '#options' => $this->getListOfViewModes($select_index),
-      '#default_value' => $custom_list_config['view_mode'] ?: '',
+      '#default_value' => (!empty($custom_list_config['view_mode'])) ? $custom_list_config['view_mode'] : '',
     ];
 
     // Number of elements that will be displayed.
     $custom_list_config_form['limit'] = [
       '#type' => 'number',
       '#title' => $this->t('Limit'),
-      '#default_value' => $custom_list_config['limit'] ?: 5,
+      '#default_value' => (!empty($custom_list_config['limit'])) ? $custom_list_config['limit'] : 5,
     ];
 
+    $custom_list_config_form['insertion_form'] = $this->getInsertsForm((!empty($config['inserts'])) ? $config['inserts'] : []);
     $form['custom_list_config_form'] = $custom_list_config_form;
 
     return $form;
@@ -152,7 +153,7 @@ class CustomListSearchApi extends CustomListBase {
     $config = $this->getConfiguration();
     $config['custom_list_config'] = $custom_list_config;
     $config['search_api_config'] = ['index' => 'content'];
-    $config['inserts'] = $this->getInsertionConfig();
+    $config['inserts'] = $this->fetchInsertSelection($custom_list_config['insertion_form']);
 
     $this->setConfiguration($config);
   }

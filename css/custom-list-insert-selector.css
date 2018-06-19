@@ -1,0 +1,58 @@
+.custom-list__insertion-form {
+  margin-bottom: 5px;
+}
+
+.custom-list__insertion-form__header {
+  display: flex;
+  background-color: lightgray;
+}
+
+.custom-list__insertion-form__header > div {
+  border: 1px solid gray;
+  padding-left: 5px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.custom-list__insertion-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.custom-list__insertion-row {
+  display: flex;
+}
+
+.custom-list__insertion-row > div {
+  border: 1px solid gray;
+  padding-left: 5px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.custom-list__insertion-row__edit-position,
+.custom-list__insertion-row__edit-view-mode {
+  display: block;
+  position: absolute;
+  z-index: 1001;
+}
+
+#drupal-off-canvas .custom-list__add_block__button.button {
+  background-color: #777;
+  background-image: -webkit-linear-gradient(top, #777, #777);
+  background-image: linear-gradient(to bottom, #777, #777);
+  color: #f5f5f5;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: center;
+  padding: 0.25em 0;
+  width: 100%;
+  display: inline-block;
+}
+
+#drupal-off-canvas .custom-list__add_block__button.button:hover,
+#drupal-off-canvas .custom-list__add_block__button.button:active,
+#drupal-off-canvas .custom-list__add_block__button.button:focus {
+  text-decoration: none;
+}
