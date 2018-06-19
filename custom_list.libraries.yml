@@ -1,6 +1,9 @@
-insert_selector:
+base:
   js:
     js/custom-list-base.js: {}
+
+insert_selector:
+  js:
     js/models/InsertionModel.js: {}
     js/views/InsertionList.js: {}
     js/views/InsertionForm.js: {}
@@ -8,6 +11,20 @@ insert_selector:
   css:
     component:
       css/custom-list-insert-selector.css: {}
+  dependencies:
+    - custom_list/base
+
+sort_selector:
+  js:
+    js/models/SortModel.js: {}
+    js/views/SortList.js: {}
+    js/views/SortForm.js: {}
+    js/custom-list-sort-selector.js: {}
+  css:
+    component:
+      css/custom-list-sort-selector.css: {}
+  dependencies:
+    - custom_list/base
 
 add_block:
   js:
