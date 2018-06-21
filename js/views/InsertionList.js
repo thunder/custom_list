@@ -59,7 +59,7 @@
       return this;
     },
 
-    editPosition: function () {
+    editPosition: function (event) {
       var $target = $(event.target);
 
       var cssConfig = $target.position();

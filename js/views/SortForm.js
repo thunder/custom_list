@@ -49,7 +49,7 @@
       event.stopPropagation();
 
       var collection = this.collection;
-      $.each(this.sortOptions, function (key) {
+      $.each(this.sortOptions.sort, function (key) {
         collection.create({
           sort_id: key,
           order: 'DESC'
