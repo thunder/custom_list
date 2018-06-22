@@ -39,6 +39,13 @@ abstract class CustomListBase extends StylePluginBase {
   protected $insertEntities = NULL;
 
   /**
+   * Flag is unique entities should be used or not.
+   *
+   * @var bool
+   */
+  protected $uniqueEntities = TRUE;
+
+  /**
    * {@inheritdoc}
    */
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
@@ -53,24 +60,31 @@ abstract class CustomListBase extends StylePluginBase {
     }
 
     // Apply entity or block inserts if there are any.
-    if (!empty($options) && $options['inserts']) {
-      $this->setInsertConfiguration($options['inserts']);
+    if (!empty($options)) {
+      if (isset($options['inserts'])) {
+        $this->setInsertConfiguration($options['inserts']);
+      }
+
+      if (isset($options['unique_entities'])) {
+        $this->uniqueEntities = $options['unique_entities'];
+      }
     }
 
     // We need entities for generating filter.
     $insert_entities = $this->getInsertEntities();
 
-    // TODO: $unique_entities -> should be renamed.
-    // TODO: Also there should be option to enable/disable that functionality!
-    /** @var \Drupal\custom_list\UniqueEntitiesStorageInterface $unique_storage */
-    $unique_storage = \Drupal::service('custom_list.unique_entities_store');
-    $unique_entities = $unique_storage->getIds();
+    $existing_entities = [];
+    if ($this->uniqueEntities) {
+      /** @var \Drupal\custom_list\UniqueEntitiesStorageInterface $unique_storage */
+      $unique_storage = \Drupal::service('custom_list.unique_entities_store');
+      $existing_entities = $unique_storage->getIds();
+    }
 
-    // Inserted entities and also already displayed entites by other views
+    // Inserted entities and also already displayed entities by other views
     // should be filtered.
-    $unique_entities = array_merge($insert_entities, $unique_entities);
-    if (!empty($unique_entities)) {
-      $filter_info = $this->getFilter($view->storage, $unique_entities);
+    $existing_entities = array_merge($insert_entities, $existing_entities);
+    if (!empty($existing_entities)) {
+      $filter_info = $this->getFilter($view->storage, $existing_entities);
 
       $handler = Views::handlerManager('filter')->getHandler($filter_info);
       $handler->init($view, $display, $filter_info);
@@ -168,6 +182,13 @@ abstract class CustomListBase extends StylePluginBase {
         $this->view->rowPlugin = $this->getEntityRowPlugin($entity);
         $this->view->rowPlugin->options['view_mode'] = $config['view_mode'];
         $this->preRender([$temporally_result_row]);
+
+        // Pre-render function adds view property to entity. Since entity is
+        // part of result and result is serialized, that leads to broken
+        // serialized result, because view is not completely initialized for
+        // Search API integration.
+        $entity->view = NULL;
+
         $rendered_inserts[$insert_entry['position']] = $this->view->rowPlugin->render($temporally_result_row);
 
         $this->view->rowPlugin = $base_plugin;
@@ -307,6 +328,16 @@ abstract class CustomListBase extends StylePluginBase {
    */
   public function setInsertConfiguration(array $insert_configuration) {
     $this->insertConfiguration = $insert_configuration;
+  }
+
+  /**
+   * Flag if style uses unique entities.
+   *
+   * @return bool
+   *   Returns TRUE if style uses unique entities.
+   */
+  public function usesUniqueEntities() {
+    return $this->uniqueEntities;
   }
 
 }

@@ -33,6 +33,7 @@ class CustomListSearchApi extends CustomListBase {
       $entity_type = $entity->getEntityTypeId();
       $entity_id = $entity->id();
 
+      // TODO: Make language independent filtering!!!
       $search_api_id = "entity:{$entity_type}/{$entity_id}:en";
       $unique_id .= "_{$entity_type}-{$entity_id}";
 

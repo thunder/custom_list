@@ -41,6 +41,12 @@ function custom_list_search_api_views_post_execute(ViewExecutable $view) {
     return;
   }
 
+  /** @var \Drupal\custom_list\Plugin\views\style\CustomListBase $style_plugin */
+  $style_plugin = $view->getStyle();
+  if (!$style_plugin->usesUniqueEntities()) {
+    return;
+  }
+
   $entities = [];
   foreach ($view->result as $row) {
     if (isset($row->_relationship_objects)) {

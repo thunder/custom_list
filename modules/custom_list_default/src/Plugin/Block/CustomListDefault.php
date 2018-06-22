@@ -47,6 +47,7 @@ class CustomListDefault extends CustomListBase {
     $preselected_content_type = (!empty($custom_list_config['content'])) ? $custom_list_config['content'] : 'node:article';
     $preselected_view_mode = (!empty($custom_list_config['view_mode'])) ? $custom_list_config['view_mode'] : 'default';
     $preselected_sorts = (!empty($custom_list_config['sort_selection'])) ? $custom_list_config['sort_selection'] : [];
+    $preselected_unique_entities = (isset($config['unique_entities'])) ? $config['unique_entities'] : TRUE;
 
     // Get all available options.
     $options = [
@@ -83,6 +84,8 @@ class CustomListDefault extends CustomListBase {
       '#title' => $this->t('Limit'),
       '#default_value' => (!empty($custom_list_config['limit'])) ? $custom_list_config['limit'] : 5,
     ];
+
+    $custom_list_config_form['unique_form'] = $this->getUniqueSelector($preselected_unique_entities);
 
     $custom_list_config_form['sort_selection'] = [
       '#type' => 'hidden',
@@ -235,6 +238,7 @@ class CustomListDefault extends CustomListBase {
     $config['entity_type_config'] = $entity_type_config;
 
     $config['inserts'] = $this->fetchInsertSelection($custom_list_config['insertion_form']);
+    $config['unique_entities'] = $this->fetchUniqueSelector($custom_list_config['unique_form']);
 
     $this->setConfiguration($config);
   }
@@ -294,6 +298,7 @@ class CustomListDefault extends CustomListBase {
               "type" => "custom_list_default",
               "options" => [
                 "inserts" => $config['inserts'],
+                "unique_entities" => $config['unique_entities'],
               ],
             ],
             "row" => [

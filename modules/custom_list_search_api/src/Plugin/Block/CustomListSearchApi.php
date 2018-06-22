@@ -82,11 +82,16 @@ class CustomListSearchApi extends CustomListBase {
     $config = $this->getConfiguration();
     $custom_list_config = (!empty($config['custom_list_config'])) ? $config['custom_list_config'] : [];
 
+    // List of available Search API indexes.
+    $list_of_indexes = $this->getListOfIndexes();
+
+    // Get pre-selections.
+    $select_index = (!empty($custom_list_config['index'])) ? $custom_list_config['index'] : key($list_of_indexes);
+    $preselected_unique_entities = (isset($config['unique_entities'])) ? $config['unique_entities'] : TRUE;
+
     // Sub-form will be created for custom list form.
     $custom_list_config_form = [];
 
-    $list_of_indexes = $this->getListOfIndexes();
-    $select_index = (!empty($custom_list_config['index'])) ? $custom_list_config['index'] : key($list_of_indexes);
     $custom_list_config_form['search_index'] = [
       '#type' => 'select',
       '#title' => $this->t('Search API Index'),
@@ -108,6 +113,8 @@ class CustomListSearchApi extends CustomListBase {
       '#title' => $this->t('Limit'),
       '#default_value' => (!empty($custom_list_config['limit'])) ? $custom_list_config['limit'] : 5,
     ];
+
+    $custom_list_config_form['unique_form'] = $this->getUniqueSelector($preselected_unique_entities);
 
     $custom_list_config_form['insertion_form'] = $this->getInsertsForm((!empty($config['inserts'])) ? $config['inserts'] : []);
     $form['custom_list_config_form'] = $custom_list_config_form;
@@ -153,16 +160,15 @@ class CustomListSearchApi extends CustomListBase {
     $config = $this->getConfiguration();
     $config['custom_list_config'] = $custom_list_config;
     $config['search_api_config'] = ['index' => 'content'];
+
     $config['inserts'] = $this->fetchInsertSelection($custom_list_config['insertion_form']);
+    $config['unique_entities'] = $this->fetchUniqueSelector($custom_list_config['unique_form']);
 
     $this->setConfiguration($config);
   }
 
   /**
    * Get default view configuration.
-   *
-   * TODO: There are exceptions, that stored view result cannot be loaded.
-   * TODO: That should be investigated.
    *
    * @return array
    *   Returns view configuration.
@@ -206,6 +212,7 @@ class CustomListSearchApi extends CustomListBase {
               'type' => 'custom_list_search_api',
               'options' => [
                 'inserts' => $config['inserts'],
+                'unique_entities' => $config['unique_entities'],
               ],
             ],
             'row' => [
@@ -240,8 +247,9 @@ class CustomListSearchApi extends CustomListBase {
           'cache_metadata' => [
             'max-age' => -1,
             'contexts' => [
-              'languages:language_interface',
-              'user.permissions',
+              "languages:language_content",
+              "languages:language_interface",
+              "url.query_args",
             ],
             'tags' => [],
           ],
