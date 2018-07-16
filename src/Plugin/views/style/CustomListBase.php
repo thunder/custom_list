@@ -3,12 +3,14 @@
 namespace Drupal\custom_list\Plugin\views\style;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\custom_list\UniqueEntitiesStorageInterface;
 use Drupal\views\Entity\View;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\style\StylePluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base view style for custom list.
@@ -46,6 +48,43 @@ abstract class CustomListBase extends StylePluginBase {
   protected $uniqueEntities = TRUE;
 
   /**
+   * Unique storage service.
+   *
+   * @var \Drupal\custom_list\UniqueEntitiesStorageInterface
+   */
+  protected $uniqueStorage;
+
+  /**
+   * Constructs a custom list views style plugin object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\custom_list\UniqueEntitiesStorageInterface $unique_storage
+   *   Unique storage service.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, UniqueEntitiesStorageInterface $unique_storage) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    $this->uniqueStorage = $unique_storage;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('custom_list.unique_entities_store')
+    );
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
@@ -75,9 +114,11 @@ abstract class CustomListBase extends StylePluginBase {
 
     $existing_entities = [];
     if ($this->usesUniqueEntities()) {
-      /** @var \Drupal\custom_list\UniqueEntitiesStorageInterface $unique_storage */
-      $unique_storage = \Drupal::service('custom_list.unique_entities_store');
-      $existing_entities = $unique_storage->getIds();
+      $existing_entities = $this->uniqueStorage->getIds();
+
+      if (!empty($insert_entities)) {
+        $this->uniqueStorage->setIds($view->storage->get('base_table'), $view->storage->get('base_field'), $insert_entities);
+      }
     }
 
     // Inserted entities and also already displayed entities by other views
