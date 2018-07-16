@@ -3,12 +3,14 @@
 namespace Drupal\custom_list\Plugin\views\style;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\custom_list\UniqueEntitiesStorageInterface;
 use Drupal\views\Entity\View;
 use Drupal\views\Plugin\views\display\DisplayPluginBase;
 use Drupal\views\Plugin\views\style\StylePluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
 use Drupal\views\Views;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Base view style for custom list.
@@ -39,6 +41,50 @@ abstract class CustomListBase extends StylePluginBase {
   protected $insertEntities = NULL;
 
   /**
+   * Flag is unique entities should be used or not.
+   *
+   * @var bool
+   */
+  protected $uniqueEntities = TRUE;
+
+  /**
+   * Unique storage service.
+   *
+   * @var \Drupal\custom_list\UniqueEntitiesStorageInterface
+   */
+  protected $uniqueStorage;
+
+  /**
+   * Constructs a custom list views style plugin object.
+   *
+   * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
+   * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\custom_list\UniqueEntitiesStorageInterface $unique_storage
+   *   Unique storage service.
+   */
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, UniqueEntitiesStorageInterface $unique_storage) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+
+    $this->uniqueStorage = $unique_storage;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('custom_list.unique_entities_store')
+    );
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
@@ -53,24 +99,33 @@ abstract class CustomListBase extends StylePluginBase {
     }
 
     // Apply entity or block inserts if there are any.
-    if (!empty($options) && $options['inserts']) {
-      $this->setInsertConfiguration($options['inserts']);
+    if (!empty($options)) {
+      if (isset($options['inserts'])) {
+        $this->setInsertConfiguration($options['inserts']);
+      }
+
+      if (isset($options['unique_entities'])) {
+        $this->setUniqueEntities($options['unique_entities']);
+      }
     }
 
     // We need entities for generating filter.
     $insert_entities = $this->getInsertEntities();
 
-    // TODO: $unique_entities -> should be renamed.
-    // TODO: Also there should be option to enable/disable that functionality!
-    /** @var \Drupal\custom_list\UniqueEntitiesStorageInterface $unique_storage */
-    $unique_storage = \Drupal::service('custom_list.unique_entities_store');
-    $unique_entities = $unique_storage->getIds();
+    $existing_entities = [];
+    if ($this->usesUniqueEntities()) {
+      $existing_entities = $this->uniqueStorage->getIds();
 
-    // Inserted entities and also already displayed entites by other views
+      if (!empty($insert_entities)) {
+        $this->uniqueStorage->setIds($view->storage->get('base_table'), $view->storage->get('base_field'), $insert_entities);
+      }
+    }
+
+    // Inserted entities and also already displayed entities by other views
     // should be filtered.
-    $unique_entities = array_merge($insert_entities, $unique_entities);
-    if (!empty($unique_entities)) {
-      $filter_info = $this->getFilter($view->storage, $unique_entities);
+    $existing_entities = array_merge($insert_entities, $existing_entities);
+    if (!empty($existing_entities)) {
+      $filter_info = $this->getFilter($view->storage, $existing_entities);
 
       $handler = Views::handlerManager('filter')->getHandler($filter_info);
       $handler->init($view, $display, $filter_info);
@@ -168,6 +223,13 @@ abstract class CustomListBase extends StylePluginBase {
         $this->view->rowPlugin = $this->getEntityRowPlugin($entity);
         $this->view->rowPlugin->options['view_mode'] = $config['view_mode'];
         $this->preRender([$temporally_result_row]);
+
+        // Pre-render function adds view property to entity. Since entity is
+        // part of result and result is serialized, that leads to broken
+        // serialized result, because view is not completely initialized for
+        // Search API integration.
+        $entity->view = NULL;
+
         $rendered_inserts[$insert_entry['position']] = $this->view->rowPlugin->render($temporally_result_row);
 
         $this->view->rowPlugin = $base_plugin;
@@ -307,6 +369,26 @@ abstract class CustomListBase extends StylePluginBase {
    */
   public function setInsertConfiguration(array $insert_configuration) {
     $this->insertConfiguration = $insert_configuration;
+  }
+
+  /**
+   * Set flag for using unique entities.
+   *
+   * @param bool $uniqueEntities
+   *   The flag value.
+   */
+  public function setUniqueEntities($uniqueEntities) {
+    $this->uniqueEntities = (bool) $uniqueEntities;
+  }
+
+  /**
+   * Flag if style uses unique entities.
+   *
+   * @return bool
+   *   Returns TRUE if style uses unique entities.
+   */
+  public function usesUniqueEntities() {
+    return $this->uniqueEntities;
   }
 
 }

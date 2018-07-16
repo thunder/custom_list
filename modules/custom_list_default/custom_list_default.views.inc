@@ -62,6 +62,12 @@ function custom_list_views_post_execute(ViewExecutable $view) {
     return;
   }
 
+  /** @var \Drupal\custom_list\Plugin\views\style\CustomListBase $style_plugin */
+  $style_plugin = $view->getStyle();
+  if (!$style_plugin->usesUniqueEntities()) {
+    return;
+  }
+
   $entities = [];
   foreach ($view->result as $row) {
     if (!empty($row->_entity)) {

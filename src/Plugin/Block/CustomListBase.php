@@ -84,6 +84,40 @@ abstract class CustomListBase extends BlockBase {
   }
 
   /**
+   * Get unique selector sub-form.
+   *
+   * @param bool $preselected_value
+   *   Preselected value for unique selector.
+   *
+   * @return array
+   *   Return sub-form for unique selector.
+   */
+  protected function getUniqueSelector($preselected_value) {
+    $unique_selector_form = [];
+
+    $unique_selector_form['unique_selection'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Unique'),
+      '#default_value' => $preselected_value,
+    ];
+
+    return $unique_selector_form;
+  }
+
+  /**
+   * Fetch unique selector value.
+   *
+   * @param array $unique_form_values
+   *   Form values for unique option.
+   *
+   * @return bool
+   *   Return if unique options is selected.
+   */
+  protected function fetchUniqueSelector(array $unique_form_values) {
+    return (bool) $unique_form_values['unique_selection'];
+  }
+
+  /**
    * Extract values from insert selection form.
    *
    * @param array $insert_form_values
