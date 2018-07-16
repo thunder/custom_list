@@ -66,7 +66,7 @@ abstract class CustomListBase extends StylePluginBase {
       }
 
       if (isset($options['unique_entities'])) {
-        $this->uniqueEntities = $options['unique_entities'];
+        $this->setUniqueEntities($options['unique_entities']);
       }
     }
 
@@ -74,7 +74,7 @@ abstract class CustomListBase extends StylePluginBase {
     $insert_entities = $this->getInsertEntities();
 
     $existing_entities = [];
-    if ($this->uniqueEntities) {
+    if ($this->usesUniqueEntities()) {
       /** @var \Drupal\custom_list\UniqueEntitiesStorageInterface $unique_storage */
       $unique_storage = \Drupal::service('custom_list.unique_entities_store');
       $existing_entities = $unique_storage->getIds();
@@ -328,6 +328,16 @@ abstract class CustomListBase extends StylePluginBase {
    */
   public function setInsertConfiguration(array $insert_configuration) {
     $this->insertConfiguration = $insert_configuration;
+  }
+
+  /**
+   * Set flag for using unique entities.
+   *
+   * @param bool $uniqueEntities
+   *   The flag value.
+   */
+  public function setUniqueEntities($uniqueEntities) {
+    $this->uniqueEntities = (bool) $uniqueEntities;
   }
 
   /**

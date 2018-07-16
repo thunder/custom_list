@@ -114,7 +114,7 @@ abstract class CustomListBase extends BlockBase {
    *   Return if unique options is selected.
    */
   protected function fetchUniqueSelector(array $unique_form_values) {
-    return boolval($unique_form_values['unique_selection']);
+    return (bool) $unique_form_values['unique_selection'];
   }
 
   /**
