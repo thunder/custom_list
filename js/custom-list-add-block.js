@@ -3,7 +3,7 @@
  */
 
 (function ($, Drupal) {
-  'use strict';
+  //'use strict';
 
   Drupal.AjaxCommands.prototype.custom_list_add_block = function (ajax, response, status) {
     // TODO: This selector should be generic for AJAX command.
