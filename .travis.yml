@@ -13,7 +13,6 @@ php:
 env:
   global:
     - PATH="$PATH:$HOME/.composer/vendor/bin"
-    - THUNDER_TEST_JAVASCRIPT=0
 
 before_install:
   - composer global require thunder/travis:dev-master
