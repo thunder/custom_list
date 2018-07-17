@@ -205,7 +205,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
   public function onSourceListChange(array $form, FormStateInterface $form_state) {
     $result = new AjaxResponse();
 
-    $result->addCommand(new ReplaceCommand('.custom-list-default__default-source-list-plugin__options', $form['plugin_subform']['options']));
+    $result->addCommand(new ReplaceCommand('.form-item-settings-custom-list-config-form-view-mode', $form['settings']['custom_list_config_form']['view_mode']));
 
     return $result;
   }
@@ -216,13 +216,17 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
    * @param string $source_list_id
    *   The source list ID.
    *
-   * @return array
+   * @return array|null
    *   Return list of view modes for source list.
    */
   protected function getViewModeList($source_list_id) {
     $view_mode_list = [
       'default' => $this->t('Default'),
     ];
+
+    if (empty($source_list_id)) {
+      return $view_mode_list;
+    }
 
     try {
       /** @var \Drupal\custom_list\Entity\SourceListEntity $source_list */

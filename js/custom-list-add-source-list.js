@@ -16,6 +16,9 @@
     );
 
     $sourceList.val(response.source_list_id);
+
+    // Change event should be triggered to execute related handlers.
+    $sourceList.trigger('change');
   };
 
 })(jQuery, Drupal);
