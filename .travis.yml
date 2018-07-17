@@ -5,3 +5,15 @@ cache:
   directories:
   - "$HOME/.composer/cache"
   - "$HOME/.drush/cache"
+
+php:
+  - 7.2
+  - 5.6
+
+env:
+  global:
+    - PATH="$PATH:$HOME/.composer/vendor/bin"
+
+before_install:
+  - composer global require thunder/travis:dev-master
+  - verify-drupal-coding-standards
