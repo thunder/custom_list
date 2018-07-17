@@ -1,20 +1,20 @@
 <?php
 
-namespace Drupal\custom_list_search_api\Plugin\Block;
+namespace Drupal\custom_list_search_api\Plugin\SourceListPlugin;
 
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\custom_list\Plugin\Block\CustomListBase;
+use Drupal\custom_list\Plugin\SourceListPluginBase;
 use Drupal\search_api\Entity\Index;
 
 /**
- * Provides a block for Search API custom list.
+ * Search API source list plugin.
  *
- * @Block(
- *   id = "custom_list_search_api",
- *   admin_label = @Translation("Search API custom list")
+ * @SourceListPlugin(
+ *  id = "source_list_plugin_search_api",
+ *  label = @Translation("Search API source list"),
  * )
  */
-class CustomListSearchApi extends CustomListBase {
+class SearchApiSourceListPlugin extends SourceListPluginBase {
 
   /**
    * List of supported entity types.
@@ -43,51 +43,32 @@ class CustomListSearchApi extends CustomListBase {
    * Initialize custom list search API block object.
    */
   protected function init() {
-    /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
-
     /** @var \Drupal\search_api\Entity\Index $index */
     foreach (Index::loadMultiple() as $index) {
       $index_id = $index->id();
 
       $this->allowedIndexes[$index_id] = $index->label();
-      $this->viewModes[$index_id] = [
-        'default' => $this->t('Default'),
-      ];
-
-      $data_source_ids = $index->getDatasourceIds();
-      foreach ($data_source_ids as $data_source_id) {
-        $type_info = explode(':', $data_source_id);
-
-        if ($type_info[0] === 'entity') {
-          $view_modes = $display_repository->getViewModes($type_info[1]);
-
-          foreach ($view_modes as $view_mode_id => $view_mode) {
-            if ($view_mode['status']) {
-              $this->viewModes[$index_id][$view_mode_id] = $view_mode['label'];
-            }
-          }
-        }
-      }
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function blockForm($form, FormStateInterface $form_state) {
-    parent::blockForm($form, $form_state);
+  public function build() {
+    $build = [];
 
-    // Form should be pre-filled with existing configuration.
-    $config = $this->getConfiguration();
-    $custom_list_config = (!empty($config['custom_list_config'])) ? $config['custom_list_config'] : [];
+    return $build;
+  }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getForm() {
     // List of available Search API indexes.
     $list_of_indexes = $this->getListOfIndexes();
 
     // Get pre-selections.
-    $select_index = (!empty($custom_list_config['index'])) ? $custom_list_config['index'] : key($list_of_indexes);
-    $preselected_unique_entities = (isset($config['unique_entities'])) ? $config['unique_entities'] : TRUE;
+    $select_index = (!empty($this->configuration['index'])) ? $this->configuration['index'] : key($list_of_indexes);
 
     // Sub-form will be created for custom list form.
     $custom_list_config_form = [];
@@ -99,27 +80,20 @@ class CustomListSearchApi extends CustomListBase {
       '#default_value' => $select_index,
     ];
 
-    // TODO: has to be fetched over Ajax!!!
-    $custom_list_config_form['view_mode'] = [
-      '#type' => 'select',
-      '#title' => $this->t('View mode'),
-      '#options' => $this->getListOfViewModes($select_index),
-      '#default_value' => (!empty($custom_list_config['view_mode'])) ? $custom_list_config['view_mode'] : '',
-    ];
+    // TODO: Add search text!
+    return $custom_list_config_form;
+  }
 
-    // Number of elements that will be displayed.
-    $custom_list_config_form['limit'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Limit'),
-      '#default_value' => (!empty($custom_list_config['limit'])) ? $custom_list_config['limit'] : 5,
-    ];
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormData(array $form, FormStateInterface $form_state) {
+    $source_list_plugin_config = [];
 
-    $custom_list_config_form['unique_form'] = $this->getUniqueSelector($preselected_unique_entities);
+    // Fetch search index ID.
+    $source_list_plugin_config['search_index'] = $form_state->getValue('search_index');
 
-    $custom_list_config_form['insertion_form'] = $this->getInsertsForm((!empty($config['inserts'])) ? $config['inserts'] : []);
-    $form['custom_list_config_form'] = $custom_list_config_form;
-
-    return $form;
+    return $source_list_plugin_config;
   }
 
   /**
@@ -139,46 +113,37 @@ class CustomListSearchApi extends CustomListBase {
   }
 
   /**
-   * Get list of available view modes for search API index.
-   *
-   * @param string $index_id
-   *   Search API index ID.
-   *
-   * @return array
-   *   Returns list of available view modes for Search API index.
+   * {@inheritdoc}
    */
-  protected function getListOfViewModes($index_id) {
-    return $this->viewModes[$index_id];
+  public function getEntityTypeInfo() {
+    $index = Index::load($this->configuration['search_index']);
+
+    $entity_type_infos = [];
+
+    $data_source_ids = $index->getDatasourceIds();
+    foreach ($data_source_ids as $data_source_id) {
+      $content_info = explode(':', $data_source_id);
+
+      if ($content_info[0] === 'entity') {
+        // TODO: get bundle from datasoruce: $index->getDatasource($id);
+        $entity_type_infos[] = [
+          'entity_type' => $content_info[1],
+          'bundle' => '_todo_',
+        ];
+      }
+    }
+
+    return $entity_type_infos;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function blockSubmit($form, FormStateInterface $form_state) {
-    $custom_list_config = $form_state->getValue('custom_list_config_form');
-
-    $config = $this->getConfiguration();
-    $config['custom_list_config'] = $custom_list_config;
-    $config['search_api_config'] = ['index' => 'content'];
-
-    $config['inserts'] = $this->fetchInsertSelection($custom_list_config['insertion_form']);
-    $config['unique_entities'] = $this->fetchUniqueSelector($custom_list_config['unique_form']);
-
-    $this->setConfiguration($config);
-  }
-
-  /**
-   * Get default view configuration.
-   *
-   * @return array
-   *   Returns view configuration.
-   */
-  protected function getViewConfig() {
-    $config = $this->getConfiguration();
-    $custom_list_config = $config['custom_list_config'];
+  public function generateConfiguration($consumer_type, array $custom_list_config) {
+    $config = $this->configuration;
 
     $view_config = [
-      'base_table' => 'search_api_index_' . $custom_list_config['search_index'],
+      'base_table' => 'search_api_index_' . $config['search_index'],
       'base_field' => 'search_api_id',
       'display' => [
         'default' => [
@@ -211,8 +176,8 @@ class CustomListSearchApi extends CustomListBase {
             'style' => [
               'type' => 'custom_list_search_api',
               'options' => [
-                'inserts' => $config['inserts'],
-                'unique_entities' => $config['unique_entities'],
+                'insertions' => $custom_list_config['insertions'],
+                'unique_entities' => $custom_list_config['unique_entities'],
               ],
             ],
             'row' => [

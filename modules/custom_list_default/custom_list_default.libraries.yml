@@ -1,0 +1,11 @@
+sort_selector:
+  js:
+    js/models/SortModel.js: {}
+    js/views/SortList.js: {}
+    js/views/SortForm.js: {}
+    js/custom-list-sort-selector.js: {}
+  css:
+    component:
+      css/custom-list-sort-selector.css: {}
+  dependencies:
+    - custom_list/base

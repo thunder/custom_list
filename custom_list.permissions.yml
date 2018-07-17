@@ -1,0 +1,13 @@
+add source list entities:
+  title: 'Create new Source List entities'
+
+administer source list entities:
+  title: 'Administer Source List entities'
+  description: 'Allow to access the administration form to configure Source List entities.'
+  restrict access: true
+
+delete source list entities:
+  title: 'Delete Source List entities'
+
+edit source list entities:
+  title: 'Edit Source List entities'

@@ -1,22 +1,22 @@
 <?php
 
-namespace Drupal\custom_list_default\Plugin\Block;
+namespace Drupal\custom_list_default\Plugin\SourceListPlugin;
 
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\custom_list\Plugin\Block\CustomListBase;
+use Drupal\custom_list\Plugin\SourceListPluginBase;
 use Drupal\views\Views;
 
 /**
- * Provides a block for default custom list.
+ * Default source list plugin.
  *
- * @Block(
- *   id = "custom_list_default",
- *   admin_label = @Translation("Default custom list")
+ * @SourceListPlugin(
+ *  id = "source_list_plugin_default",
+ *  label = @Translation("Default source list"),
  * )
  */
-class CustomListDefault extends CustomListBase {
+class DefaultSourceListPlugin extends SourceListPluginBase {
 
   /**
    * List of supported entity types.
@@ -33,141 +33,75 @@ class CustomListDefault extends CustomListBase {
   /**
    * {@inheritdoc}
    */
-  public function blockForm($form, FormStateInterface $form_state) {
-    parent::blockForm($form, $form_state);
+  public function build() {
+    $build = [];
 
-    // Form should be pre-filled with existing configuration.
-    $config = $this->getConfiguration();
-    $custom_list_config = (!empty($config['custom_list_config'])) ? $config['custom_list_config'] : [];
+    return $build;
+  }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getForm() {
     // Sub-form will be created for custom list form.
     $custom_list_config_form = [];
 
     // Get pre-selections.
-    $preselected_content_type = (!empty($custom_list_config['content'])) ? $custom_list_config['content'] : 'node:article';
-    $preselected_view_mode = (!empty($custom_list_config['view_mode'])) ? $custom_list_config['view_mode'] : 'default';
-    $preselected_sorts = (!empty($custom_list_config['sort_selection'])) ? $custom_list_config['sort_selection'] : [];
-    $preselected_unique_entities = (isset($config['unique_entities'])) ? $config['unique_entities'] : TRUE;
+    $preselected_content_type = (!empty($this->configuration['content_type'])) ? $this->configuration['content_type'] : 'node:article';
+    $preselected_sorts = (!empty($this->configuration['sort_selection'])) ? $this->configuration['sort_selection'] : [];
 
     // Get all available options.
     $options = [
       'content_type' => $this->getContentOptions(),
-      'view_mode' => $this->getViewModeList($preselected_content_type),
       'sort' => $this->getSortOptions($preselected_content_type),
     ];
 
     $custom_list_config_form['options'] = [
       '#type' => 'hidden',
-      '#default_value' => json_encode($options),
+      '#value' => json_encode($options),
+      '#attributes' => [
+        'class' => ['custom-list-default__default-source-list-plugin__options'],
+      ],
     ];
 
-    $custom_list_config_form['content'] = [
+    $custom_list_config_form['content_type'] = [
       '#type' => 'select',
       '#title' => $this->t('Content'),
       '#options' => $options['content_type'],
       '#default_value' => $preselected_content_type,
       '#ajax' => [
-        'callback' => [$this, 'onContentChange'],
+        'callback' => [$this, 'onContentTypeChange'],
       ],
     ];
-
-    $custom_list_config_form['view_mode'] = [
-      '#type' => 'select',
-      '#title' => $this->t('View mode'),
-      '#options' => $options['view_mode'],
-      '#default_value' => $preselected_view_mode,
-    ];
-
-    // Number of elements that will be displayed.
-    $custom_list_config_form['limit'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Limit'),
-      '#default_value' => (!empty($custom_list_config['limit'])) ? $custom_list_config['limit'] : 5,
-    ];
-
-    $custom_list_config_form['unique_form'] = $this->getUniqueSelector($preselected_unique_entities);
 
     $custom_list_config_form['sort_selection'] = [
       '#type' => 'hidden',
       '#default_value' => json_encode($preselected_sorts),
+      '#attributes' => [
+        'class' => [
+          'custom-list-default__default-source-list-plugin__sort_selection',
+        ],
+      ],
       '#attached' => [
+
         'library' => [
-          'custom_list/sort_selector',
+          'custom_list_default/sort_selector',
         ],
       ],
     ];
 
-    $custom_list_config_form['insertion_form'] = $this->getInsertsForm((!empty($config['inserts'])) ? $config['inserts'] : []);
-    $form['custom_list_config_form'] = $custom_list_config_form;
-
-    return $form;
+    return $custom_list_config_form;
   }
 
   /**
    * Handles switching of the content type.
    */
-  public function onContentChange($form, FormStateInterface $form_state) {
+  public function onContentTypeChange($form, FormStateInterface $form_state) {
     $result = new AjaxResponse();
 
-    $result->addCommand(new ReplaceCommand('.form-item-settings-custom-list-config-form-view-mode', $form['settings']['custom_list_config_form']['view_mode']));
+    $result->addCommand(new ReplaceCommand('.custom-list-default__default-source-list-plugin__options', $form['plugin_subform']['options']));
 
     return $result;
-  }
-
-  /**
-   * Get sorting options.
-   *
-   * @param string $content_type
-   *   Content type in format of entity_type_id:bundle.
-   *
-   * @return array
-   *   Return sorting options.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  protected function getSortOptions($content_type) {
-    $type_info = $this->getTypeInfo($content_type);
-
-    $data_table = $type_info->getDataTable();
-    $options = Views::viewsDataHelper()->fetchFields([$data_table], 'sort');
-
-    $sort_options = [];
-    foreach ($options as $option_id => $option) {
-      if (strpos($option_id, $data_table . '.') === 0) {
-        $sort_options[$option_id] = strval($option['title']);
-      }
-    }
-
-    return $sort_options;
-  }
-
-  /**
-   * Get list of view modes for content type.
-   *
-   * @param string $content_type
-   *   Content type in format of entity_type_id:bundle.
-   *
-   * @return array
-   *   Return list of view modes for content type.
-   */
-  protected function getViewModeList($content_type) {
-    $view_mode_list = [
-      'default' => $this->t('Default'),
-    ];
-
-    /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
-    $display_repository = \Drupal::service('entity_display.repository');
-
-    $content_info = explode(':', $content_type);
-    $view_modes = $display_repository->getViewModes($content_info[0]);
-
-    foreach ($view_modes as $view_mode_id => $view_mode) {
-      if ($view_mode['status']) {
-        $view_mode_list[$view_mode_id] = $view_mode['label'];
-      }
-    }
-
-    return $view_mode_list;
   }
 
   /**
@@ -214,53 +148,89 @@ class CustomListDefault extends CustomListBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Get sorting options.
+   *
+   * @param string $content_type
+   *   Content type in format of entity_type_id:bundle.
+   *
+   * @return array
+   *   Return sorting options.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function blockSubmit($form, FormStateInterface $form_state) {
-    $custom_list_config = $form_state->getValue('custom_list_config_form');
+  protected function getSortOptions($content_type) {
+    $type_info = $this->getTypeInfo($content_type);
 
-    $type_info = $this->getTypeInfo($custom_list_config['content']);
+    $data_table = $type_info->getDataTable();
+    $options = Views::viewsDataHelper()->fetchFields([$data_table], 'sort');
 
-    $entity_type_config = [];
-    $entity_type_config['base_table'] = $type_info->getBaseTable();
-    $entity_type_config['data_table'] = $type_info->getDataTable();
-    $entity_keys = $type_info->getKeys();
-
-    if (isset($entity_keys['id'])) {
-      $entity_type_config['base_field'] = $entity_keys['id'];
-      $entity_type_config['type_field'] = $entity_keys['bundle'];
+    $sort_options = [];
+    foreach ($options as $option_id => $option) {
+      if (strpos($option_id, $data_table . '.') === 0) {
+        $sort_options[$option_id] = strval($option['title']);
+      }
     }
 
-    $custom_list_config['sort_selection'] = json_decode($custom_list_config['sort_selection'], TRUE);
-
-    $config = $this->getConfiguration();
-    $config['custom_list_config'] = $custom_list_config;
-    $config['entity_type_config'] = $entity_type_config;
-
-    $config['inserts'] = $this->fetchInsertSelection($custom_list_config['insertion_form']);
-    $config['unique_entities'] = $this->fetchUniqueSelector($custom_list_config['unique_form']);
-
-    $this->setConfiguration($config);
+    return $sort_options;
   }
 
   /**
-   * Get default view configuration.
-   *
+   * {@inheritdoc}
+   */
+  public function getFormData(array $form, FormStateInterface $form_state) {
+    $source_list_plugin_config = [];
+
+    unset($source_list_plugin_config['options']);
+
+    // Fetch content type information.
+    $source_list_plugin_config['content_type'] = $form_state->getValue('content_type');
+    $content_type = $this->getTypeInfo($source_list_plugin_config['content_type']);
+
+    $source_list_plugin_config['base_table'] = $content_type->getBaseTable();
+    $source_list_plugin_config['data_table'] = $content_type->getDataTable();
+    $entity_keys = $content_type->getKeys();
+
+    if (isset($entity_keys['id'])) {
+      $source_list_plugin_config['base_field'] = $entity_keys['id'];
+      $source_list_plugin_config['type_field'] = $entity_keys['bundle'];
+    }
+
+    // Fetch sort selection.
+    $source_list_plugin_config['sort_selection'] = json_decode($form_state->getValue('sort_selection'), TRUE);
+
+    return $source_list_plugin_config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getEntityTypeInfo() {
+    $content_info = explode(':', $this->configuration['content_type']);
+
+    return [
+      [
+        'entity_type' => $content_info[0],
+        'bundle' => $content_info[0],
+      ],
+    ];
+  }
+
+  /**
    * TODO: Heavy revisit and cleanup, how view config is generated.
    *
-   * @return array
-   *   Returns view configuration.
+   * {@inheritdoc}
    */
-  protected function getViewConfig() {
-    $config = $this->getConfiguration();
-    $custom_list_config = $config['custom_list_config'];
-    $entity_type_config = $config['entity_type_config'];
+  public function generateConfiguration($consumer_type, array $custom_list_config) {
+    if ($consumer_type !== 'view') {
+      throw new \RuntimeException('Not supported consumer type.');
+    }
 
-    $content_info = explode(':', $custom_list_config['content']);
+    $config = $this->configuration;
+    $content_info = explode(':', $config['content_type']);
 
     $view_config = [
-      "base_table" => $entity_type_config['data_table'],
-      "base_field" => $entity_type_config['base_field'],
+      "base_table" => $config['data_table'],
+      "base_field" => $config['base_field'],
       "display" => [
         "default" => [
           "display_plugin" => "default",
@@ -297,8 +267,8 @@ class CustomListDefault extends CustomListBase {
             "style" => [
               "type" => "custom_list_default",
               "options" => [
-                "inserts" => $config['inserts'],
-                "unique_entities" => $config['unique_entities'],
+                "insertions" => $custom_list_config['insertions'],
+                "unique_entities" => $custom_list_config['unique_entities'],
               ],
             ],
             "row" => [
@@ -326,18 +296,18 @@ class CustomListDefault extends CustomListBase {
             "filters" => [
               "type" => [
                 "id" => "type",
-                "table" => $entity_type_config['data_table'],
-                "field" => $entity_type_config['type_field'],
+                "table" => $config['data_table'],
+                "field" => $config['type_field'],
                 "value" => [
                   $content_info[1] => $content_info[1],
                 ],
                 "entity_type" => $content_info[0],
-                "entity_field" => $entity_type_config['type_field'],
+                "entity_field" => $config['type_field'],
                 "plugin_id" => "bundle",
               ],
               "status" => [
                 "value" => "1",
-                "table" => $entity_type_config['data_table'],
+                "table" => $config['data_table'],
                 "field" => "status",
                 "plugin_id" => "boolean",
                 "entity_type" => $content_info[0],
@@ -373,7 +343,7 @@ class CustomListDefault extends CustomListBase {
     ];
 
     // Add sorts.
-    $sort_selection = isset($custom_list_config['sort_selection']) ? $custom_list_config['sort_selection'] : [];
+    $sort_selection = isset($config['sort_selection']) ? $config['sort_selection'] : [];
     foreach ($sort_selection as $sort_info) {
       $this->appendSortOption($view_config['display']['default']['display_options']['sorts'], $sort_info, $content_info[0]);
     }

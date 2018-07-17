@@ -8,9 +8,14 @@
 
   Drupal.behaviors.loadCustomListSortSelector = {
     attach: function (context) {
+      // Some times we have issue with detached context.
+      if (!$.contains(document, context)) {
+        return;
+      }
+
       var $form = $(context)
-        .find('*[name="settings[custom_list_config_form][sort_selection]"]')
-        .once('load-custom-list-sort');
+        .find('.custom-list-default__default-source-list-plugin__sort_selection')
+        .once('load__custom-list-default__sort');
 
       if ($form.length > 0) {
         var form = new Drupal.custom_list.SortForm();

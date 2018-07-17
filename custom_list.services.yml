@@ -2,3 +2,6 @@ services:
   custom_list.unique_entities_store:
     class: Drupal\custom_list\UniqueEntitiesStorage
     arguments: []
+  plugin.manager.source_list_plugin:
+    class: Drupal\custom_list\Plugin\SourceListPluginManager
+    parent: default_plugin_manager

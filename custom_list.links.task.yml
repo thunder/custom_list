@@ -1,0 +1,16 @@
+# Source List routing definition
+entity.source_list.canonical:
+  route_name: entity.source_list.canonical
+  base_route: entity.source_list.canonical
+  title: 'View'
+
+entity.source_list.edit_form:
+  route_name: entity.source_list.edit_form
+  base_route: entity.source_list.canonical
+  title: 'Edit'
+
+entity.source_list.delete_form:
+  route_name:  entity.source_list.delete_form
+  base_route:  entity.source_list.canonical
+  title: Delete
+  weight: 10

@@ -34,7 +34,7 @@
       this.$el.html(this.template());
 
       // Load existing data.
-      var dataElement = $('*[name="settings[custom_list_config_form][insertion_form][insert_selection]"]');
+      var dataElement = $('.custom-list__insertion-selection');
       this.collection.set(JSON.parse(dataElement.val()));
     },
 
