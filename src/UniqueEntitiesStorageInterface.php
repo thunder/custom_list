@@ -7,6 +7,7 @@ namespace Drupal\custom_list;
  *
  * TODO: Should be renamed since name is misleading.
  */
+
 interface UniqueEntitiesStorageInterface {
 
   /**
