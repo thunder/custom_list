@@ -13,9 +13,9 @@ php:
 
 env:
   global:
-    - PATH="$PATH:$TRAVIS_BUILD_DIR/vendor/bin"
+    - PATH="$PATH:$HOME/.composer/vendor/bin"
 
 before_install:
-  - echo $PATH
-  - ls $PATH
+  - phpenv config-rm xdebug.ini
+  - composer global require thunder/travis:dev-master
   - thunder-travis-before-install
