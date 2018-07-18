@@ -19,3 +19,6 @@ before_install:
   - phpenv config-rm xdebug.ini
   - composer global require thunder/travis:dev-master
   - thunder-travis-before-install
+
+install:
+  - thunder-module-travis-install
