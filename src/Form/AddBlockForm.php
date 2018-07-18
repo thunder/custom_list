@@ -100,7 +100,6 @@ class AddBlockForm extends FormBase {
     $form['settings'] = $this->getPluginForm($this->block)
       ->buildConfigurationForm($form['settings'], $subform_state);
 
-    // TODO: Check for styling!
     $form['actions']['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Add Block'),

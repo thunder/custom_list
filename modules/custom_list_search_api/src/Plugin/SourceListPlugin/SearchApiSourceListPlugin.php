@@ -120,16 +120,19 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
 
     $entity_type_infos = [];
 
-    $data_source_ids = $index->getDatasourceIds();
-    foreach ($data_source_ids as $data_source_id) {
+    $data_sources = $index->getDatasources();
+    /** @var \Drupal\search_api\Datasource\DatasourceInterface $data_source */
+    foreach ($data_sources as $data_source_id => $data_source) {
       $content_info = explode(':', $data_source_id);
 
       if ($content_info[0] === 'entity') {
-        // TODO: get bundle from datasoruce: $index->getDatasource($id);
-        $entity_type_infos[] = [
-          'entity_type' => $content_info[1],
-          'bundle' => '_todo_',
-        ];
+        $bundles = $data_source->getBundles();
+        foreach ($bundles as $bundle_id => $bundle) {
+          $entity_type_infos[] = [
+            'entity_type' => $content_info[1],
+            'bundle' => $bundle_id,
+          ];
+        }
       }
     }
 
@@ -141,6 +144,8 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
    */
   public function generateConfiguration($consumer_type, array $custom_list_config) {
     $config = $this->configuration;
+
+    $entity_type_infos = $this->getEntityTypeInfo();
 
     $view_config = [
       'base_table' => 'search_api_index_' . $config['search_index'],
@@ -183,13 +188,7 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
             'row' => [
               'type' => 'search_api',
               'options' => [
-                'view_modes' => [
-                  // TODO: Get entity:bundle in some way! Look at ::init()
-                  // TODO: then getDatasourceIds().
-                  'entity:node' => [
-                    'article' => $custom_list_config['view_mode'],
-                  ],
-                ],
+                'view_modes' => [],
               ],
             ],
             'filters' => [],
@@ -221,6 +220,16 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
         ],
       ],
     ];
+
+    $view_modes = &$view_config['display']['default']['row']['options']['view_modes'];
+    foreach ($entity_type_infos as $entity_type_info) {
+      $entity_type_key = 'entity:' . $entity_type_info['entity_type'];
+      if (!isset($view_modes[$entity_type_key])) {
+        $view_modes[$entity_type_key] = [];
+      }
+
+      $view_modes[$entity_type_key][$entity_type_info['bundle']] = $custom_list_config['view_mode'];
+    }
 
     return $view_config;
   }

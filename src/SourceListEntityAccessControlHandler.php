@@ -21,8 +21,7 @@ class SourceListEntityAccessControlHandler extends EntityAccessControlHandler {
     /** @var \Drupal\custom_list\Entity\SourceListEntityInterface $entity */
     switch ($operation) {
       case 'view':
-        // TODO: Add view mode!!!
-        return AccessResult::allowedIfHasPermission($account, 'edit source list entities');
+        return AccessResult::allowedIfHasPermission($account, 'view source list entities');
 
       case 'update':
         return AccessResult::allowedIfHasPermission($account, 'edit source list entities');

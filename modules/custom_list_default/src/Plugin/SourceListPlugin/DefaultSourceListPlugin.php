@@ -210,7 +210,7 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
     return [
       [
         'entity_type' => $content_info[0],
-        'bundle' => $content_info[0],
+        'bundle' => $content_info[1],
       ],
     ];
   }

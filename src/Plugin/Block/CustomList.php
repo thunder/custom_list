@@ -12,10 +12,12 @@ use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\SubformStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
 use Drupal\custom_list\Plugin\SourceListPluginManager;
 use Drupal\views\Entity\View;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -52,6 +54,20 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
   protected $entityTypeManager;
 
   /**
+   * The logger for custom list.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
+   * The list of view modes for source list ID.
+   *
+   * @var array
+   */
+  protected $sourceListViewModes = [];
+
+  /**
    * Constructs a new FieldBlock.
    *
    * @param array $configuration
@@ -66,13 +82,16 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
    *   The display repository.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger for custom list module.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, SourceListPluginManager $source_list_plugin_manager, EntityDisplayRepositoryInterface $display_repository, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, SourceListPluginManager $source_list_plugin_manager, EntityDisplayRepositoryInterface $display_repository, EntityTypeManagerInterface $entity_type_manager, LoggerInterface $logger) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->sourceListPluginManager = $source_list_plugin_manager;
     $this->displayRepository = $display_repository;
     $this->entityTypeManager = $entity_type_manager;
+    $this->logger = $logger;
   }
 
   /**
@@ -85,7 +104,8 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       $plugin_definition,
       $container->get('plugin.manager.source_list_plugin'),
       $container->get('entity_display.repository'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('custom_list.logger')
     );
   }
 
@@ -118,19 +138,48 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       $source_lists = [];
     }
 
-    // We need to use input value to get current selected list in ajax call.
-    // TODO: This is strange!
-    $input = $form_state->getUserInput();
+    // Get preselection for the form.
+    $base_preselection = [
+      'source_list' => key($source_lists),
+      'view_mode' => 'default',
+      'unique_entities' => TRUE,
+      'limit' => 5,
+      'insertions' => [],
+    ];
 
-    // Get pre-selections.
-    $source_list = (!empty($input['settings']['custom_list_config_form']['source_list'])) ? $input['settings']['custom_list_config_form']['source_list'] : ((!empty($custom_list_config['source_list'])) ? $custom_list_config['source_list'] : key($source_lists));
-    $preselected_view_mode = (!empty($custom_list_config['view_mode'])) ? $custom_list_config['view_mode'] : 'default';
-    $preselected_unique_entities = (isset($custom_list_config['unique_entities'])) ? $custom_list_config['unique_entities'] : TRUE;
+    $config_preselection = [];
+    foreach ($base_preselection as $preselection_key => $base_value) {
+      if (isset($custom_list_config[$preselection_key])) {
+        $config_preselection = $custom_list_config[$preselection_key];
+      }
+    }
+
+    if ($form_state->isProcessingInput()) {
+      if ($form_state instanceof SubformStateInterface) {
+        $form_state_with_values = $form_state->getCompleteFormState();
+      }
+      else {
+        $form_state_with_values = $form_state;
+      }
+
+      $form_preselection = [
+        'source_list' => $form_state_with_values->getValue([
+          'settings',
+          'custom_list_config_form',
+          'source_list',
+        ]),
+      ];
+    }
+    else {
+      $form_preselection = [];
+    }
+
+    $preselection = array_merge($base_preselection, $config_preselection, $form_preselection);
 
     // Get all available options.
     $options = [
       'source_list' => $source_lists,
-      'view_mode' => $this->getViewModeList($source_list),
+      'view_mode' => $this->getViewModeList($preselection['source_list']),
     ];
 
     // Sub-form will be created for custom list form.
@@ -145,7 +194,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       '#type' => 'select',
       '#title' => $this->t('Source list'),
       '#options' => $options['source_list'],
-      '#default_value' => $source_list,
+      '#default_value' => $preselection['source_list'],
       '#ajax' => [
         'callback' => [$this, 'onSourceListChange'],
       ],
@@ -173,18 +222,18 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       '#type' => 'select',
       '#title' => $this->t('View mode'),
       '#options' => $options['view_mode'],
-      '#default_value' => $preselected_view_mode,
+      '#default_value' => $preselection['view_mode'],
     ];
 
     // Number of elements that will be displayed.
     $custom_list_config_form['limit'] = [
       '#type' => 'number',
       '#title' => $this->t('Limit'),
-      '#default_value' => (!empty($custom_list_config['limit'])) ? $custom_list_config['limit'] : 5,
+      '#default_value' => $preselection['limit'],
     ];
 
-    $custom_list_config_form['unique_entities'] = $this->getUniqueSelector($preselected_unique_entities);
-    $custom_list_config_form['insertions'] = $this->getInsertionsForm((!empty($custom_list_config['insertions'])) ? $custom_list_config['insertions'] : []);
+    $custom_list_config_form['unique_entities'] = $this->getUniqueSelector($preselection['unique_entities']);
+    $custom_list_config_form['insertions'] = $this->getInsertionsForm($preselection['insertions']);
 
     $form['custom_list_config_form'] = $custom_list_config_form;
 
@@ -228,6 +277,11 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       return $view_mode_list;
     }
 
+    // In case of consecutive calls, we can return value from stored list.
+    if (!empty($this->sourceListViewModes[$source_list_id])) {
+      return $this->sourceListViewModes[$source_list_id];
+    }
+
     try {
       /** @var \Drupal\custom_list\Entity\SourceListEntity $source_list */
       $source_list = $this->getSourceList($source_list_id);
@@ -247,19 +301,30 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       return $view_mode_list;
     }
 
+    // Only one view mode will be selected for custom list block, that's why we
+    // have to find view mode enabled for every bundle type that could be
+    // provided by source list.
     $view_modes = [];
-
-    // TODO: add support for different view modes for different entity types!
+    $uninitialized_view_modes = TRUE;
     $entity_type_infos = $plugin->getEntityTypeInfo();
     foreach ($entity_type_infos as $entity_type_info) {
-      $view_modes = array_merge($view_modes, $this->displayRepository->getViewModes($entity_type_info['entity_type']));
-    }
+      $bundle_view_modes = $this->displayRepository->getViewModeOptionsByBundle($entity_type_info['entity_type'], $entity_type_info['bundle']);
 
-    foreach ($view_modes as $view_mode_id => $view_mode) {
-      if ($view_mode['status']) {
-        $view_mode_list[$view_mode_id] = $view_mode['label'];
+      if ($uninitialized_view_modes) {
+        $view_modes = $bundle_view_modes;
+        $uninitialized_view_modes = FALSE;
+      }
+      else {
+        $view_modes = array_intersect($view_modes, $bundle_view_modes);
       }
     }
+
+    foreach ($view_modes as $view_mode_id => $view_mode_label) {
+      $view_mode_list[$view_mode_id] = (string) $view_mode_label;
+    }
+
+    // Store view modes for source list, to avoid multiple consecutive calls.
+    $this->sourceListViewModes[$source_list_id] = $view_mode_list;
 
     return $view_mode_list;
   }
@@ -289,13 +354,19 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       $source_list = $this->getSourceList($custom_list_config['source_list']);
     }
     catch (InvalidPluginDefinitionException $e) {
+      $this->logger->warning(sprintf('The plugin definition for source list (ID: %s) is not found.', $custom_list_config['source_list']));
+
       return [];
     }
     catch (PluginNotFoundException $e) {
+      $this->logger->warning(sprintf('The plugin for source list (ID: %s) is not found.', $custom_list_config['source_list']));
+
       return [];
     }
 
     if (empty($source_list)) {
+      $this->logger->warning(sprintf('The source list (ID: %s) is not available.', $custom_list_config['source_list']));
+
       return [];
     }
 
@@ -304,7 +375,8 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       $plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig()->getValue()[0]);
     }
     catch (PluginException $e) {
-      // TODO: some info that block is broken!!!
+      $this->logger->warning(sprintf('Unable to render the block, because the plugin for source list (ID: %s) is not available.', $source_list->id()));
+
       return [];
     }
 
@@ -438,8 +510,6 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
   /**
    * Get all available source list entities for selection.
    *
-   * TODO: get list only with available plugins.
-   *
    * @return array
    *   Return list of source lists for selection.
    *
@@ -448,12 +518,27 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
    */
   protected function getSourceLists() {
     /** @var \Drupal\custom_list\Entity\SourceListEntity[] $source_list_entities */
-    $source_list_entities = $this->entityTypeManager->getStorage('source_list')
-      ->loadMultiple();
+    $source_list_entities = $this->entityTypeManager->getStorage('source_list')->loadMultiple();
 
     $source_lists = [];
+    $available_plug_ids = [];
     foreach ($source_list_entities as $entity_id => $entity) {
-      $source_lists[$entity_id] = $entity->label();
+      $plugin_id = $entity->getPluginId();
+
+      if (!isset($available_plug_ids[$plugin_id])) {
+        try {
+          $this->sourceListPluginManager->getDefinition($plugin_id);
+          $available_plug_ids[$plugin_id] = TRUE;
+        }
+        catch (PluginNotFoundException $e) {
+          $this->logger->warning(sprintf('The plugin (ID: %s) is not available.', $plugin_id));
+          $available_plug_ids[$plugin_id] = FALSE;
+        }
+      }
+
+      if ($available_plug_ids[$plugin_id]) {
+        $source_lists[$entity_id] = $entity->label();
+      }
     }
 
     return $source_lists;

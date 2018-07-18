@@ -13,6 +13,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\custom_list\Ajax\AddSourceListCommand;
 use Drupal\custom_list\Plugin\SourceListPluginManager;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -32,6 +33,13 @@ class SourceListEntityForm extends ContentEntityForm {
   protected $sourceListPluginManager;
 
   /**
+   * The logger for custom list.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  /**
    * Constructs a ContentEntityForm object.
    *
    * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
@@ -42,11 +50,14 @@ class SourceListEntityForm extends ContentEntityForm {
    *   The entity type bundle service.
    * @param \Drupal\Component\Datetime\TimeInterface $time
    *   The time service.
+   * @param \Psr\Log\LoggerInterface $logger
+   *   The logger for custom list module.
    */
-  public function __construct(EntityRepositoryInterface $entity_repository, SourceListPluginManager $source_list_plugin_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info = NULL, TimeInterface $time = NULL) {
+  public function __construct(EntityRepositoryInterface $entity_repository, SourceListPluginManager $source_list_plugin_manager, EntityTypeBundleInfoInterface $entity_type_bundle_info, TimeInterface $time, LoggerInterface $logger) {
     parent::__construct($entity_repository, $entity_type_bundle_info, $time);
 
     $this->sourceListPluginManager = $source_list_plugin_manager;
+    $this->logger = $logger;
   }
 
   /**
@@ -57,7 +68,8 @@ class SourceListEntityForm extends ContentEntityForm {
       $container->get('entity.repository'),
       $container->get('plugin.manager.source_list_plugin'),
       $container->get('entity_type.bundle.info'),
-      $container->get('datetime.time')
+      $container->get('datetime.time'),
+      $container->get('custom_list.logger')
     );
   }
 
@@ -189,7 +201,8 @@ class SourceListEntityForm extends ContentEntityForm {
       $entity->setConfig($plugin_config);
     }
     else {
-      // TODO: Log error!
+      $this->logger->error(sprintf('Plugin is not defined for source list (ID: %s) and it is saved as empty list.', $entity->id()));
+
       $entity->setPluginId('');
       $entity->setConfig([]);
     }

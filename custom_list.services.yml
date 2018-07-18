@@ -5,3 +5,6 @@ services:
   plugin.manager.source_list_plugin:
     class: Drupal\custom_list\Plugin\SourceListPluginManager
     parent: default_plugin_manager
+  custom_list.logger:
+    parent: logger.channel_base
+    arguments: ['custom_list']

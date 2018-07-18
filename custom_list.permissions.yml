@@ -11,3 +11,6 @@ delete source list entities:
 
 edit source list entities:
   title: 'Edit Source List entities'
+
+view source list entities:
+  title: 'View Source List entities'
