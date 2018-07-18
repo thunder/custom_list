@@ -16,4 +16,6 @@ env:
     - PATH="$PATH:$TRAVIS_BUILD_DIR/vendor/bin"
 
 before_install:
+  - echo $PATH
+  - ls $PATH
   - thunder-travis-before-install
