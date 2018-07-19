@@ -33,15 +33,6 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function build() {
-    $build = [];
-
-    return $build;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getForm() {
     // Sub-form will be created for custom list form.
     $custom_list_config_form = [];

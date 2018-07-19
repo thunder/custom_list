@@ -6,7 +6,7 @@
 
   'use strict';
 
-  Drupal.custom_list.SortList = Backbone.View.extend({
+  Drupal.custom_list_default.SortList = Backbone.View.extend({
     tagName: 'li',
     template: _.template(
       '<div class="custom-list-default__sort-row">' +

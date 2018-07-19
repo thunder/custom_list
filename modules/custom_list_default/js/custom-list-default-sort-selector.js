@@ -1,5 +1,5 @@
 /**
- * @file custom-list-sort-selector.js
+ * @file custom-list-default-sort-selector.js
  */
 
 (function ($, Drupal) {
@@ -18,7 +18,7 @@
         .once('load__custom-list-default__sort');
 
       if ($form.length > 0) {
-        var form = new Drupal.custom_list.SortForm();
+        var form = new Drupal.custom_list_default.SortForm();
         $form.after(form.render().el);
       }
     }

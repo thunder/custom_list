@@ -6,7 +6,7 @@
 
   'use strict';
 
-  Drupal.custom_list.SortModel = Backbone.Model.extend({
+  Drupal.custom_list_default.SortModel = Backbone.Model.extend({
 
     defaults: function () {
       return {

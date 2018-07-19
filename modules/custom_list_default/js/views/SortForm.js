@@ -6,7 +6,7 @@
 
   'use strict';
 
-  Drupal.custom_list.SortForm = Backbone.View.extend({
+  Drupal.custom_list_default.SortForm = Backbone.View.extend({
     template: _.template(
       '<div class="custom-list-default__sort-form">' +
       '  <div>' + Drupal.t('Sort List') + '</div>' +
@@ -26,7 +26,7 @@
 
     initialize: function () {
       this.collection = new Backbone.Collection(null, {
-        model: Drupal.custom_list.SortModel
+        model: Drupal.custom_list_default.SortModel
       });
 
       this.listenTo(this.collection, 'add', this.addOne);
@@ -71,7 +71,7 @@
     },
 
     addOne: function (insert_entry) {
-      var view = new Drupal.custom_list.SortList({model: insert_entry});
+      var view = new Drupal.custom_list_default.SortList({model: insert_entry});
 
       this.$('.custom-list-default__sort-list').append(view.render().el);
     },
