@@ -22,4 +22,4 @@ before_install:
   - thunder-travis-before-install
 
 install:
-  - thunder-module-travis-install
+  - thunder-travis-module-test-install
