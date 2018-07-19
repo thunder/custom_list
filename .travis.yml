@@ -21,5 +21,8 @@ before_install:
 install:
   - thunder-travis-module-test-drupal-install
 
+before_script:
+  - thunder-travis-drupal-before-script
+
 script:
-  - thunder-travis-run-tests
+  - thunder-travis-tests-script
