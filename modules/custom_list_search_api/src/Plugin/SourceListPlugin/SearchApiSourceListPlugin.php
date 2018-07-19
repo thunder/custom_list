@@ -80,7 +80,7 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
       '#default_value' => $select_index,
     ];
 
-    // TODO: Add search text!
+    // TODO: Add search text.
     return $custom_list_config_form;
   }
 
@@ -221,7 +221,7 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
       ],
     ];
 
-    $view_modes = &$view_config['display']['default']['row']['options']['view_modes'];
+    $view_modes = &$view_config['display']['default']['display_options']['row']['options']['view_modes'];
     foreach ($entity_type_infos as $entity_type_info) {
       $entity_type_key = 'entity:' . $entity_type_info['entity_type'];
       if (!isset($view_modes[$entity_type_key])) {

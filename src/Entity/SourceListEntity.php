@@ -7,6 +7,7 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\TypedData\Exception\MissingDataException;
 use Drupal\user\UserInterface;
 
 /**
@@ -98,7 +99,23 @@ class SourceListEntity extends ContentEntityBase implements SourceListEntityInte
    * {@inheritdoc}
    */
   public function getConfig() {
-    return $this->get('config');
+    $config_item = $this->get('config');
+
+    if ($config_item->isEmpty()) {
+      return [];
+    }
+
+    try {
+      $first_list_element = $config_item->first();
+      if (empty($first_list_element)) {
+        return [];
+      }
+
+      return $first_list_element->getValue();
+    }
+    catch (MissingDataException $e) {
+      return [];
+    }
   }
 
   /**
@@ -106,6 +123,7 @@ class SourceListEntity extends ContentEntityBase implements SourceListEntityInte
    */
   public function setConfig(array $config) {
     $this->set('config', $config);
+
     return $this;
   }
 
@@ -205,7 +223,8 @@ class SourceListEntity extends ContentEntityBase implements SourceListEntityInte
     $fields['config'] = BaseFieldDefinition::create('map')
       ->setLabel(t('JSON Config'))
       ->setDescription(t('JSON configuration for source list.'))
-      ->setRequired(TRUE);
+      ->setRequired(TRUE)
+      ->setCardinality(1);
 
     return $fields;
   }

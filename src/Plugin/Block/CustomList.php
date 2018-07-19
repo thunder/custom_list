@@ -150,28 +150,37 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     $config_preselection = [];
     foreach ($base_preselection as $preselection_key => $base_value) {
       if (isset($custom_list_config[$preselection_key])) {
-        $config_preselection = $custom_list_config[$preselection_key];
+        $config_preselection[$preselection_key] = $custom_list_config[$preselection_key];
       }
     }
 
+    $form_preselection = [];
     if ($form_state->isProcessingInput()) {
-      if ($form_state instanceof SubformStateInterface) {
-        $form_state_with_values = $form_state->getCompleteFormState();
-      }
-      else {
-        $form_state_with_values = $form_state;
+      // The selected source list state should be changed only when change on
+      // select field for source list is changed.
+      $triggering_element = $form_state->getTriggeringElement();
+      if (!empty($triggering_element) && $triggering_element['#name'] === 'settings[custom_list_config_form][source_list]') {
+        if ($form_state instanceof SubformStateInterface) {
+          $form_state_with_values = $form_state->getCompleteFormState();
+        }
+        else {
+          $form_state_with_values = $form_state;
+        }
+
+        $form_state->set(
+          'source_list',
+          $form_state_with_values->getValue([
+            'settings',
+            'custom_list_config_form',
+            'source_list',
+          ])
+        );
       }
 
-      $form_preselection = [
-        'source_list' => $form_state_with_values->getValue([
-          'settings',
-          'custom_list_config_form',
-          'source_list',
-        ]),
-      ];
-    }
-    else {
-      $form_preselection = [];
+      $source_list_state = $form_state->get('source_list');
+      if (!empty($source_list_state)) {
+        $form_preselection['source_list'] = $source_list_state;
+      }
     }
 
     $preselection = array_merge($base_preselection, $config_preselection, $form_preselection);
@@ -295,7 +304,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
 
     try {
       /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $plugin */
-      $plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig()->getValue()[0]);
+      $plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig());
     }
     catch (PluginException $e) {
       return $view_mode_list;
@@ -372,7 +381,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
 
     /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $plugin */
     try {
-      $plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig()->getValue()[0]);
+      $plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig());
     }
     catch (PluginException $e) {
       $this->logger->warning(sprintf('Unable to render the block, because the plugin for source list (ID: %s) is not available.', $source_list->id()));

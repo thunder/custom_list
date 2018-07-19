@@ -3,6 +3,7 @@
 namespace Drupal\custom_list\Form;
 
 use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Component\Plugin\Exception\PluginException;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\CloseModalDialogCommand;
 use Drupal\Core\Ajax\ReplaceCommand;
@@ -78,7 +79,6 @@ class SourceListEntityForm extends ContentEntityForm {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     if (!empty($form_state->getUserInput()['_drupal_ajax'])) {
-      // TODO: Get trigger element and keep reference for it.
       $form_state->set('_ajax_response', TRUE);
     }
 
@@ -112,23 +112,19 @@ class SourceListEntityForm extends ContentEntityForm {
       $preselected_plugin_id = $form_state->getValue('source_list_plugin');
     }
 
-    /** @var \Drupal\Core\Field\MapFieldItemList $plugin_config */
-    $plugin_config = $entity->getConfig()->getValue();
-
-    // TODO: Check if some other field type would be better then map!
-    if (empty($plugin_config)) {
-      $plugin_config = [];
-    }
-    else {
-      $plugin_config = $plugin_config[0];
-    }
-
     /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $plugin_instance */
-    $plugin_instance = $this->sourceListPluginManager->createInstance($preselected_plugin_id, $plugin_config);
+    try {
+      $plugin_instance = $this->sourceListPluginManager->createInstance($preselected_plugin_id, $entity->getConfig());
 
-    $form['plugin_subform'] = $plugin_instance->getForm();
-    $form['plugin_subform']['#type'] = 'container';
-    $form['plugin_subform']['#attributes']['class'][] = 'custom-list__plugin-subform';
+      $form['plugin_subform'] = $plugin_instance->getForm();
+      $form['plugin_subform']['#type'] = 'container';
+      $form['plugin_subform']['#attributes']['class'][] = 'custom-list__plugin-subform';
+    }
+    catch (PluginException $e) {
+      $form['plugin_subform'] = [
+        '#markup' => $this->t('Unable to render plugin form because selected plugin is not available.'),
+      ];
+    }
 
     return $form;
   }

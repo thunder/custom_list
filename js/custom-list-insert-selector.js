@@ -9,7 +9,7 @@
   Drupal.behaviors.loadCustomListInsertSelector = {
     attach: function (context) {
       // Some times we have issue with detached context.
-      if (!$.contains(document, context)) {
+      if (document !== context && !$.contains(document, context)) {
         return;
       }
 
