@@ -21,4 +21,4 @@ before_install:
   - thunder-travis-before-install
 
 install:
-  - thunder-travis-module-test-install
+  - thunder-travis-module-test-drupal-install
