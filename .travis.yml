@@ -23,7 +23,7 @@ env:
     - THUNDER_TRAVIS_THUNDER_VERSION="dev-8.x-3.x"
 
 before_script:
-  - composer global require thunder/travis:dev-master
+  - composer global require thunder/travis
 
 script:
   - test-module
