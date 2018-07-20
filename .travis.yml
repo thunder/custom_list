@@ -17,12 +17,13 @@ php:
 env:
   matrix:
     - DISTRIBUTION=drupal
+    - DISTRIBUTION=thunder
   global:
     - PATH="$PATH:$HOME/.composer/vendor/bin""
-    - THUNDER_TRAVIS_TEST_GROUP="javascript"
+    - THUNDER_TRAVIS_TEST_GROUP="Common"
 
 before_script:
   - composer global require thunder/travis:dev-master
 
 script:
-  - travis_wait test-module
+  - test-module
