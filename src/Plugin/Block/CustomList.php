@@ -156,26 +156,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
 
     $form_preselection = [];
     if ($form_state->isProcessingInput()) {
-      // The selected source list state should be changed only when change on
-      // select field for source list is changed.
-      $triggering_element = $form_state->getTriggeringElement();
-      if (!empty($triggering_element) && $triggering_element['#name'] === 'settings[custom_list_config_form][source_list]') {
-        if ($form_state instanceof SubformStateInterface) {
-          $form_state_with_values = $form_state->getCompleteFormState();
-        }
-        else {
-          $form_state_with_values = $form_state;
-        }
-
-        $form_state->set(
-          'source_list',
-          $form_state_with_values->getValue([
-            'settings',
-            'custom_list_config_form',
-            'source_list',
-          ])
-        );
-      }
+      $this->setSelectedSourceList($form_state);
 
       $source_list_state = $form_state->get('source_list');
       if (!empty($source_list_state)) {
@@ -250,6 +231,35 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
   }
 
   /**
+   * Set selected source list for the form state.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  protected function setSelectedSourceList(FormStateInterface $form_state) {
+    // The selected source list state should be changed only when change on
+    // select field for source list is changed.
+    $triggering_element = $form_state->getTriggeringElement();
+    if (!empty($triggering_element) && $triggering_element['#name'] === 'settings[custom_list_config_form][source_list]') {
+      if ($form_state instanceof SubformStateInterface) {
+        $form_state_with_values = $form_state->getCompleteFormState();
+      }
+      else {
+        $form_state_with_values = $form_state;
+      }
+
+      $form_state->set(
+        'source_list',
+        $form_state_with_values->getValue([
+          'settings',
+          'custom_list_config_form',
+          'source_list',
+        ])
+      );
+    }
+  }
+
+  /**
    * Handler for Ajax request when source list selection is changed.
    *
    * @param array $form
@@ -263,6 +273,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
   public function onSourceListChange(array $form, FormStateInterface $form_state) {
     $result = new AjaxResponse();
 
+    $result->addCommand(new ReplaceCommand('.form-item-settings-custom-list-config-form-source-list', $form['settings']['custom_list_config_form']['source_list']));
     $result->addCommand(new ReplaceCommand('.form-item-settings-custom-list-config-form-view-mode', $form['settings']['custom_list_config_form']['view_mode']));
 
     return $result;
