@@ -21,6 +21,7 @@ env:
   global:
     - PATH="$PATH:$HOME/.composer/vendor/bin""
     - THUNDER_TRAVIS_TEST_GROUP="Common"
+    - THUNDER_TRAVIS_THUNDER_VERSION="dev-8.x-3.x"
 
 before_script:
   - composer global require thunder/travis:dev-master
