@@ -15,7 +15,8 @@ php:
   - 7.2
 
 env:
-  - DISTRIBUTION=drupal
+  matrix:
+    - DISTRIBUTION=drupal
   global:
     - PATH="$PATH:$HOME/.composer/vendor/bin""
     - THUNDER_TRAVIS_TEST_GROUP="javascript"
