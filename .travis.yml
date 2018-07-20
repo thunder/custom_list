@@ -15,9 +15,13 @@ php:
   - 7.2
 
 env:
+  - DISTRIBUTION=drupal
   global:
-    - PATH="$PATH:$TRAVIS_BUILD_DIR/vendor/bin"
+    - PATH="$PATH:$HOME/.composer/vendor/bin""
     - THUNDER_TRAVIS_TEST_GROUP="javascript"
 
+before_script:
+  - composer global require thunder/travis:dev-master
+
 script:
-  - travis_wait test-module drupal
+  - travis_wait test-module
