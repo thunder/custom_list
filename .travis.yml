@@ -27,7 +27,7 @@ env:
     - THUNDER_TRAVIS_TEST_GROUP="javascript"
 
 before_script:
-  - composer global require thunder/travis
+  - composer global require thunder/travis:dev-master
 
 script:
   - test-module
