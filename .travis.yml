@@ -14,6 +14,11 @@ cache:
 php:
   - 7.2
 
+branches:
+  only:
+    - feature/travis-integration
+    - /^8\.([0-9]+|x)\-[0-9]+\.([0-9]+|x)$/
+
 env:
   matrix:
     - DISTRIBUTION=drupal
@@ -22,7 +27,7 @@ env:
     - THUNDER_TRAVIS_TEST_GROUP="javascript"
 
 before_script:
-  - composer global require thunder/travis:dev-feature/simplify-test-runner
+  - composer global require thunder/travis
 
 script:
   - test-module
