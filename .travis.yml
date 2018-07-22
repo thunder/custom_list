@@ -19,11 +19,10 @@ env:
     - DISTRIBUTION=drupal
   global:
     - PATH="$PATH:$HOME/.composer/vendor/bin"
-    - THUNDER_TRAVIS_TEST_GROUP="Common"
-    - THUNDER_TRAVIS_THUNDER_VERSION="dev-8.x-3.x"
+    - THUNDER_TRAVIS_TEST_GROUP="javascript"
 
 before_script:
-  - composer global require thunder/travis
+  - composer global require thunder/travis:dev-feature/simplify-test-runner
 
 script:
   - test-module
