@@ -24,7 +24,7 @@ env:
     - DISTRIBUTION=drupal
   global:
     - PATH="$PATH:$HOME/.composer/vendor/bin"
-    - THUNDER_TRAVIS_TEST_GROUP="Core"
+    - THUNDER_TRAVIS_TEST_GROUP="routing"
 
 before_install:
   - composer global require thunder/travis:dev-feature/split-into-stages
