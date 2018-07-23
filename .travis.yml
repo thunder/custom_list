@@ -27,6 +27,7 @@ env:
     - THUNDER_TRAVIS_TEST_GROUP="routing"
 
 before_install:
+  - phpenv config-rm xdebug.ini
   - composer global require thunder/travis:dev-feature/split-into-stages
   - create-project
 
