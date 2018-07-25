@@ -20,14 +20,13 @@ branches:
 env:
   matrix:
     - DISTRIBUTION=drupal
-    - DISTRIBUTION=thunder
   global:
     - PATH="$PATH:$HOME/.composer/vendor/bin"
     - THUNDER_TRAVIS_TEST_GROUP="routing"
 
 before_install:
   - phpenv config-rm xdebug.ini
-  - composer global require thunder/travis:dev-feature/mysql
+  - composer global require thunder/travis:dev-master
   - create-project
 
 install:
