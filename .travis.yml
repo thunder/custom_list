@@ -35,3 +35,6 @@ install:
 
 script:
   - test-module
+
+notifications:
+  email: false
