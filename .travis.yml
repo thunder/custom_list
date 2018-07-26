@@ -24,7 +24,7 @@ env:
     - PATH="$PATH:$HOME/.composer/vendor/bin"
     - THUNDER_TRAVIS_TEST_GROUP="javascript"
     - THUNDER_TRAVIS_TEST_RUNNER="run-tests"
-
+    - MINK_DRIVER_ARGS_WEBDRIVER='["chrome", null, "http://localhost:4444/wd/hub"]'
 before_install:
   - phpenv config-rm xdebug.ini
   - composer global require thunder/travis:fix/drupal-5.6-dev
