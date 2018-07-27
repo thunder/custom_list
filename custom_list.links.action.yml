@@ -1,0 +1,5 @@
+entity.source_list.add_form:
+  route_name: entity.source_list.add_form
+  title: 'Add Source List'
+  appears_on:
+    - entity.source_list.collection

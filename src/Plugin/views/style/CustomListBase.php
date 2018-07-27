@@ -98,10 +98,10 @@ abstract class CustomListBase extends StylePluginBase {
       return;
     }
 
-    // Apply entity or block inserts if there are any.
+    // Apply entity or block insertions if there are any.
     if (!empty($options)) {
-      if (isset($options['inserts'])) {
-        $this->setInsertConfiguration($options['inserts']);
+      if (isset($options['insertions'])) {
+        $this->setInsertConfiguration($options['insertions']);
       }
 
       if (isset($options['unique_entities'])) {
@@ -170,12 +170,12 @@ abstract class CustomListBase extends StylePluginBase {
   public function renderGroupingSets($sets) {
     $output = parent::renderGroupingSets($sets);
 
-    $rendered_inserts = $this->getRenderedInserts();
+    $rendered_insertions = $this->getRenderedInserts();
 
     $global_offset = 0;
     $output_index = 0;
     $total_outputs = count($output);
-    foreach ($rendered_inserts as $insert_index => $rendered_insert) {
+    foreach ($rendered_insertions as $insert_index => $rendered_insert) {
       for ($index = $output_index; $index < $total_outputs; $index++) {
         $inner_index = $insert_index - $global_offset;
 
@@ -204,9 +204,9 @@ abstract class CustomListBase extends StylePluginBase {
     // TODO: Add some grouping so that preRender is more efficient.
     $insert_entities = $this->getInsertEntities();
 
-    $rendered_inserts = [];
-    $inserts = $this->getInsertConfiguration();
-    foreach ($inserts as $insert_entry) {
+    $rendered_insertions = [];
+    $insertions = $this->getInsertConfiguration();
+    foreach ($insertions as $insert_entry) {
       $config = $insert_entry['config'];
 
       if ($insert_entry['type'] === 'entity') {
@@ -230,12 +230,12 @@ abstract class CustomListBase extends StylePluginBase {
         // Search API integration.
         $entity->view = NULL;
 
-        $rendered_inserts[$insert_entry['position']] = $this->view->rowPlugin->render($temporally_result_row);
+        $rendered_insertions[$insert_entry['position']] = $this->view->rowPlugin->render($temporally_result_row);
 
         $this->view->rowPlugin = $base_plugin;
       }
       elseif ($insert_entry['type'] === 'block') {
-        $rendered_inserts[$insert_entry['position']] = $this->getRenderedBlock(
+        $rendered_insertions[$insert_entry['position']] = $this->getRenderedBlock(
           $config['type'],
           $config['config']
         );
@@ -245,9 +245,9 @@ abstract class CustomListBase extends StylePluginBase {
       }
     }
 
-    ksort($rendered_inserts);
+    ksort($rendered_insertions);
 
-    return $rendered_inserts;
+    return $rendered_insertions;
   }
 
   /**
@@ -263,8 +263,8 @@ abstract class CustomListBase extends StylePluginBase {
       /** @var \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager */
       $entity_type_manager = \Drupal::service('entity_type.manager');
 
-      $inserts = $this->getInsertConfiguration();
-      foreach ($inserts as $insert_entry) {
+      $insertions = $this->getInsertConfiguration();
+      foreach ($insertions as $insert_entry) {
         if ($insert_entry['type'] === 'entity') {
           $config = $insert_entry['config'];
 
@@ -343,11 +343,11 @@ abstract class CustomListBase extends StylePluginBase {
   public function query() {
     parent::query();
 
-    $num_of_inserts = count($this->getInsertConfiguration());
-    if ($num_of_inserts > 0 && empty($this->view->pager)) {
+    $num_of_insertions = count($this->getInsertConfiguration());
+    if ($num_of_insertions > 0 && empty($this->view->pager)) {
       $this->view->initPager();
 
-      $this->view->pager->setItemsPerPage($this->view->pager->getItemsPerPage() - $num_of_inserts);
+      $this->view->pager->setItemsPerPage($this->view->pager->getItemsPerPage() - $num_of_insertions);
     }
   }
 

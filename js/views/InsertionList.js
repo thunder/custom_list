@@ -40,7 +40,7 @@
       this.listenTo(this.model, 'change', this.render);
       this.listenTo(this.model, 'destroy', this.remove);
 
-      this.persitElement = $('*[name="settings[custom_list_config_form][insertion_form][insert_selection]"]');
+      this.persitElement = $('.custom-list__insertion-selection');
     },
 
     persistCollection: function () {

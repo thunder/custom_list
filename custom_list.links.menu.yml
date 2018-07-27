@@ -1,0 +1,8 @@
+
+# Source List menu items definition
+entity.source_list.collection:
+  title: 'Source Lists'
+  route_name: entity.source_list.collection
+  description: 'Source List entities'
+  parent: system.admin_structure
+  weight: 100

@@ -31,3 +31,9 @@ add_block:
     js/custom-list-add-block.js: {}
   dependencies:
     - core/drupal.ajax
+
+add_source_list:
+  js:
+    js/custom-list-add-source-list.js: {}
+  dependencies:
+    - core/drupal.ajax
