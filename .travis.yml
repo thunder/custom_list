@@ -22,7 +22,7 @@ env:
     - PATH="$PATH:$HOME/.composer/vendor/bin"
 
 before_install:
-  - composer global require thunder/travis @dev
+  - composer global require thunder/travis @alpha
   - project-create
 
 install:
