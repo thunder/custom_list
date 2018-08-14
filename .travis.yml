@@ -18,23 +18,18 @@ branches:
     - /^8\.([0-9]+|x)\-[0-9]+\.([0-9]+|x)$/
 
 env:
-  matrix:
-    - DISTRIBUTION=drupal
   global:
     - PATH="$PATH:$HOME/.composer/vendor/bin"
-    - THUNDER_TRAVIS_TEST_GROUP="javascript"
-    - THUNDER_TRAVIS_TEST_RUNNER="run-tests"
-    - MINK_DRIVER_ARGS_WEBDRIVER='["chrome", null, "http://localhost:4444/wd/hub"]'
+
 before_install:
-  - phpenv config-rm xdebug.ini
-  - composer global require thunder/travis:fix/drupal-5.6-dev
-  - create-project
+  - composer global require thunder/travis
+  - project-create
 
 install:
-  - install-project
+  - project-install
 
 script:
-  - test-module
+  - project-test
 
 notifications:
   email: false
