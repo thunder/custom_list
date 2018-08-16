@@ -14,7 +14,6 @@ php:
 
 branches:
   only:
-    - feature/travis-integration
     - /^8\.([0-9]+|x)\-[0-9]+\.([0-9]+|x)$/
 
 env:
@@ -22,14 +21,10 @@ env:
     - PATH="$PATH:$HOME/.composer/vendor/bin"
 
 before_install:
-  - composer global require thunder/travis @alpha
-  - project-create
-
-install:
-  - project-install
+  - composer global require thunder/travis @beta
 
 script:
-  - project-test
+  - test-drupal-module
 
 notifications:
   email: false
