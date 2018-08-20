@@ -11,7 +11,6 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\custom_list\Ajax\AddSourceListCommand;
 use Drupal\custom_list\Plugin\SourceListPluginManager;
 use Psr\Log\LoggerInterface;
@@ -23,8 +22,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @ingroup custom_list
  */
 class SourceListEntityForm extends ContentEntityForm {
-
-  use MessengerTrait;
 
   /**
    * The source list plugin manager.
