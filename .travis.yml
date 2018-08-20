@@ -22,7 +22,7 @@ env:
     - THUNDER_TRAVIS_TEST_GROUP=custom_list,custom_list_default
 
 before_install:
-  - composer global require thunder/travis @beta
+  - composer global require thunder/travis:dev-fix/multiple-groups
 
 script:
   - test-drupal-module
