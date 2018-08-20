@@ -52,7 +52,7 @@ function custom_list_default_views_data_alter(array &$data) {
 /**
  * Implements @see hook_views_post_execute().
  */
-function custom_list_views_post_execute(ViewExecutable $view) {
+function custom_list_default_views_post_execute(ViewExecutable $view) {
   if (empty($view->result)) {
     return;
   }

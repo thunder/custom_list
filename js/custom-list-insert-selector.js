@@ -8,15 +8,20 @@
 
   Drupal.behaviors.loadCustomListInsertSelector = {
     attach: function (context) {
+      // Some times we have issue with detached context.
+      if (document !== context && !$.contains(document, context)) {
+        return;
+      }
+
       var $form = $(context)
-        .find('*[name="settings[custom_list_config_form][insertion_form][insert_selection]"]')
+        .find('.custom-list__insertion-selection')
         .once('load-custom-list-insert');
 
       if ($form.length > 0) {
         var form = new Drupal.custom_list.InsertionForm();
         $form.after(form.render().el);
 
-        var $entityBrowserElement = $(context).find('*[name="settings[custom_list_config_form][insertion_form][entity_browser_selector][entity_ids]"]');
+        var $entityBrowserElement = $form.siblings('*[name$="[entity_browser_selector][entity_ids]"]');
         $entityBrowserElement.on('entity_browser_value_updated', function () {
           var selection = $entityBrowserElement.val();
 
@@ -40,7 +45,7 @@
           });
         });
 
-        var $addButton = $('[data-drupal-selector="edit-settings-custom-list-config-form-insertion-form-add-block"]');
+        var $addButton = $('.custom-list__add-block');
         $addButton.on('custom_list_add_block', function (event, data) {
           form.collection.create({
             position: form.collection.length,

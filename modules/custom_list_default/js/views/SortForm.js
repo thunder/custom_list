@@ -6,41 +6,41 @@
 
   'use strict';
 
-  Drupal.custom_list.SortForm = Backbone.View.extend({
+  Drupal.custom_list_default.SortForm = Backbone.View.extend({
     template: _.template(
-      '<div class="custom-list__sort-form">' +
+      '<div class="custom-list-default__sort-form">' +
       '  <div>' + Drupal.t('Sort List') + '</div>' +
-      '  <div class="custom-list__sort-form__header">' +
+      '  <div class="custom-list-default__sort-form__header">' +
       '    <div>' + Drupal.t('Sort by') + '</div>' +
       '    <div>' + Drupal.t('Order') + '</div>' +
       '    <div>' + Drupal.t('Actions') + '</div>' +
       '  </div>' +
-      '  <ul class="custom-list__sort-list"></ul>' +
-      '  <input type="submit" class="button custom-list__sort__add-button" value="' + Drupal.t('Add sort option') + '" />' +
+      '  <ul class="custom-list-default__sort-list"></ul>' +
+      '  <input type="submit" class="button custom-list-default__sort__add-button" value="' + Drupal.t('Add sort option') + '" />' +
       '</div>'
     ),
 
     events: {
-      'click .custom-list__sort__add-button': 'addSort'
+      'click .custom-list-default__sort__add-button': 'addSort'
     },
 
     initialize: function () {
       this.collection = new Backbone.Collection(null, {
-        model: Drupal.custom_list.SortModel
+        model: Drupal.custom_list_default.SortModel
       });
 
       this.listenTo(this.collection, 'add', this.addOne);
       this.listenTo(this.collection, 'reset', this.addAll);
       this.listenTo(this.collection, 'all', this.render);
 
-      this.list = this.$('.custom-list__sort-list');
+      this.list = this.$('.custom-list-default__sort-list');
 
-      this.sortOptions = JSON.parse($('*[name="settings[custom_list_config_form][options]"]').val());
+      this.sortOptions = JSON.parse($('.custom-list-default__default-source-list-plugin__options').val());
 
       this.$el.html(this.template());
 
       // Load existing data.
-      var dataElement = $('*[name="settings[custom_list_config_form][sort_selection]"]');
+      var dataElement = $('.custom-list-default__default-source-list-plugin__sort_selection');
       this.collection.set(JSON.parse(dataElement.val()));
     },
 
@@ -71,9 +71,9 @@
     },
 
     addOne: function (insert_entry) {
-      var view = new Drupal.custom_list.SortList({model: insert_entry});
+      var view = new Drupal.custom_list_default.SortList({model: insert_entry});
 
-      this.$('.custom-list__sort-list').append(view.render().el);
+      this.$('.custom-list-default__sort-list').append(view.render().el);
     },
 
     addAll: function () {
