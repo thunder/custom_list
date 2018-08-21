@@ -5,8 +5,6 @@
  * Contains view integration hooks for custom list Search API.
  */
 
-use Drupal\views\ViewExecutable;
-
 /**
  * Add Search API filter.
  *
@@ -26,44 +24,4 @@ function custom_list_search_api_views_data_alter(array &$data) {
     }
   }
 
-}
-
-/**
- * Implements @see hook_views_post_execute().
- */
-function custom_list_search_api_views_post_execute(ViewExecutable $view) {
-  if (empty($view->result)) {
-    return;
-  }
-
-  // Handle uniques only relevant for this styles provided by this module.
-  if ($view->getStyle()->getPluginId() !== 'custom_list_search_api') {
-    return;
-  }
-
-  /** @var \Drupal\custom_list\Plugin\views\style\CustomListBase $style_plugin */
-  $style_plugin = $view->getStyle();
-  if (!$style_plugin->usesUniqueEntities()) {
-    return;
-  }
-
-  $entities = [];
-  foreach ($view->result as $row) {
-    if (isset($row->_relationship_objects)) {
-      foreach ($row->_relationship_objects as $relationship_objects) {
-        /** @var \Drupal\Core\Entity\Plugin\DataType\EntityAdapter $relationship_object */
-        foreach ($relationship_objects as $relationship_object) {
-          $entities[] = $relationship_object->getValue();
-        }
-      }
-    }
-  }
-
-  /** @var \Drupal\custom_list\UniqueEntitiesStorageInterface $unique_storage */
-  $unique_storage = \Drupal::service('custom_list.unique_entities_store');
-
-  /** @var \Drupal\views\ViewEntityInterface $view_storage */
-  $view_storage = $view->storage;
-
-  $unique_storage->setIds($view_storage->get('base_table'), $view_storage->get('base_field'), $entities);
 }
