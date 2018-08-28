@@ -24,7 +24,8 @@
 
         if ($form.data('from-instance')) {
           form = $form.data('from-instance');
-        } else {
+        }
+        else {
           form = new Drupal.custom_list.InsertionForm();
           $form.after(form.render().el);
 

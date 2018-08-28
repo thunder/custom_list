@@ -103,9 +103,7 @@ class SourceList extends WidgetBase {
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return [
-        'source_list' => 'NULL',
-      ] + parent::defaultConfiguration();
+    return ['source_list' => 'NULL'] + parent::defaultConfiguration();
   }
 
   /**
