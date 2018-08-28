@@ -14,14 +14,23 @@
       }
 
       var $form = $(context)
-        .find('.custom-list__insertion-selection')
-        .once('load-custom-list-insert');
+        .find('.custom-list__insertion-selection');
 
-      if ($form.length > 0) {
-        var form = new Drupal.custom_list.InsertionForm();
-        $form.after(form.render().el);
+      // TODO: find cleaner way to re-register handler on source list change.
+      var $entityBrowserElement = $form.siblings('*[name$="[entity_browser_selector][entity_ids]"]').once('load-custom-list-insert');
 
-        var $entityBrowserElement = $form.siblings('*[name$="[entity_browser_selector][entity_ids]"]');
+      if ($entityBrowserElement.length > 0) {
+        var form;
+
+        if ($form.data('from-instance')) {
+          form = $form.data('from-instance');
+        } else {
+          form = new Drupal.custom_list.InsertionForm();
+          $form.after(form.render().el);
+
+          $form.data('from-instance', form);
+        }
+
         $entityBrowserElement.on('entity_browser_value_updated', function () {
           var selection = $entityBrowserElement.val();
 
@@ -45,7 +54,7 @@
           });
         });
 
-        var $addButton = $('.custom-list__add-block');
+        var $addButton = $('.custom-list__add-block').once('load-custom-list-insert');
         $addButton.on('custom_list_add_block', function (event, data) {
           form.collection.create({
             position: form.collection.length,

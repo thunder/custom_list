@@ -202,9 +202,6 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
           'custom-list__add-source-list',
         ],
         'data-dialog-type' => 'modal',
-        'data-dialog-options' => Json::encode([
-          'width' => 700,
-        ]),
       ],
     ];
 
@@ -223,7 +220,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     ];
 
     $custom_list_config_form['unique_entities'] = $this->getUniqueSelector($preselection['unique_entities']);
-    $custom_list_config_form['insertions'] = $this->getInsertionsForm($preselection['insertions']);
+    $custom_list_config_form['insertions'] = $this->getInsertionsForm($preselection['insertions'], $preselection['source_list']);
 
     $form['custom_list_config_form'] = $custom_list_config_form;
 
@@ -275,6 +272,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
 
     $result->addCommand(new ReplaceCommand('.form-item-settings-custom-list-config-form-source-list', $form['settings']['custom_list_config_form']['source_list']));
     $result->addCommand(new ReplaceCommand('.form-item-settings-custom-list-config-form-view-mode', $form['settings']['custom_list_config_form']['view_mode']));
+    $result->addCommand(new ReplaceCommand('[data-drupal-selector="edit-settings-custom-list-config-form-insertions-entity-browser-selector-entity-browser"]', $form['settings']['custom_list_config_form']['insertions']['entity_browser_selector']));
 
     return $result;
   }
@@ -411,11 +409,13 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
    *
    * @param array $selection
    *   Existing selection of entities.
+   * @param string $source_list
+   *   The source list ID.
    *
    * @return array
    *   Returns form elements.
    */
-  protected function getInsertionsForm(array $selection) {
+  protected function getInsertionsForm(array $selection, $source_list) {
     $insertions_form = [];
 
     $insertions_form['insertion_selection'] = [
@@ -435,7 +435,13 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     // TODO: configurable entity browsers - in some way!
     $insertions_form['entity_browser_selector'] = [
       '#type' => 'entity_browser',
-      '#entity_browser' => 'custom_list_articles',
+      '#entity_browser' => 'custom_list',
+      '#widget_context' => [
+        'source_list' => $source_list,
+      ],
+      '#attributes' => [
+        'class' => ['custom-list__entity-browser-selector'],
+      ],
     ];
 
     $insertions_form['add_block'] = [

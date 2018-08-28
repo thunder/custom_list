@@ -31,6 +31,19 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
   protected $viewModes = [];
 
   /**
+   * The list of supported consumers.
+   *
+   * @var array
+   */
+  protected $supportedConsumerTypes = [
+    'view',
+    'entity_browser_view',
+  ];
+
+
+  protected $entityTypeInfo = NULL;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition) {
@@ -116,10 +129,13 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
    * {@inheritdoc}
    */
   public function getEntityTypeInfo() {
+    if ($this->entityTypeInfo !== NULL) {
+      return $this->entityTypeInfo;
+    }
+
+    $this->entityTypeInfo = [];
+
     $index = Index::load($this->configuration['search_index']);
-
-    $entity_type_infos = [];
-
     $data_sources = $index->getDatasources();
     /** @var \Drupal\search_api\Datasource\DatasourceInterface $data_source */
     foreach ($data_sources as $data_source_id => $data_source) {
@@ -128,7 +144,7 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
       if ($content_info[0] === 'entity') {
         $bundles = $data_source->getBundles();
         foreach ($bundles as $bundle_id => $bundle) {
-          $entity_type_infos[] = [
+          $this->entityTypeInfo[] = [
             'entity_type' => $content_info[1],
             'bundle' => $bundle_id,
           ];
@@ -136,13 +152,37 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
       }
     }
 
-    return $entity_type_infos;
+    return $this->entityTypeInfo;
   }
 
   /**
    * {@inheritdoc}
    */
   public function generateConfiguration($consumer_type, array $custom_list_config) {
+    if (!in_array($consumer_type, $this->supportedConsumerTypes)) {
+      throw new \RuntimeException('Not supported consumer type.');
+    }
+
+    $view_config = $this->getBaseViewConfig($custom_list_config);
+    if ($consumer_type === 'entity_browser_view') {
+      $this->addEntityBrowserDisplay($view_config);
+    }
+
+    return $view_config;
+  }
+
+  /**
+   * Get the base view configuration for this plugin.
+   *
+   * TODO: Heavy revisit and cleanup, how view config is generated.
+   *
+   * @param array $custom_list_config
+   *   Configuration for custom list.
+   *
+   * @return array
+   *   Returns the base view configuration.
+   */
+  protected function getBaseViewConfig(array $custom_list_config) {
     $config = $this->configuration;
 
     $entity_type_infos = $this->getEntityTypeInfo();
@@ -232,6 +272,172 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
     }
 
     return $view_config;
+  }
+
+  /**
+   * Append entity browser display to the base view configuration.
+   */
+  protected function addEntityBrowserDisplay(array &$view_config) {
+    $base_filter = $view_config['display']['default']['display_options']['filters'];
+
+    $config = $this->configuration;
+
+    // Get first entity type, so that we can display title for it.
+    // TODO: add support for multiple entity types.
+    $entity_type_infos = $this->getEntityTypeInfo();
+    $entity_type = '';
+    foreach ($entity_type_infos as $entity_type_info) {
+      $entity_type = $entity_type_info['entity_type'];
+
+      break;
+    }
+
+    $base_filter += [
+      'title' => [
+        'id' => 'title',
+        'plugin_id' => 'search_api_text',
+        'table' => 'search_api_index_' . $config['search_index'],
+        'field' => 'title',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'group' => 1,
+        'admin_label' => '',
+        'operator' => '=',
+        'value' => [
+          'min' => '',
+          'max' => '',
+          'value' => '',
+        ],
+        'exposed' => TRUE,
+        'expose' => [
+          'operator_id' => 'title_op',
+          'label' => 'Title',
+          'description' => '',
+          'use_operator' => FALSE,
+          'operator' => 'title_op',
+          'identifier' => 'title',
+          'required' => FALSE,
+          'remember' => FALSE,
+          'multiple' => FALSE,
+          'remember_roles' =>
+            [
+              'authenticated' => 'authenticated',
+              'anonymous' => '0',
+              'administrator' => '0',
+            ],
+          'placeholder' => '',
+        ],
+      ],
+    ];
+
+    $view_config['display']['source_list_display'] = [
+      'display_plugin' => 'source_list_display',
+      'id' => 'source_list_display',
+      'position' => 2,
+      'display_options' => [
+        'display_extenders' => [],
+        'defaults' => [
+          'style' => FALSE,
+          'row' => FALSE,
+          'fields' => FALSE,
+          'pager' => FALSE,
+          'filters' => FALSE,
+        ],
+        "row" => [
+          "type" => "fields",
+        ],
+        'filters' => $base_filter,
+        'style' => [
+          'type' => 'table',
+          'options' => [
+            'grouping' => [],
+            'row_class' => '',
+            'default_row_class' => TRUE,
+            'override' => TRUE,
+            'sticky' => FALSE,
+            'caption' => '',
+            'summary' => '',
+            'description' => '',
+            'columns' => [
+              'entity_browser_select' => 'entity_browser_select',
+              'title' => 'title',
+            ],
+            'info' => [
+              'entity_browser_select' => [
+                'align' => '',
+                'separator' => '',
+                'empty_column' => FALSE,
+                'responsive' => '',
+              ],
+              'title' => [
+                'sortable' => FALSE,
+                'default_sort_order' => 'asc',
+                'align' => '',
+                'separator' => '',
+                'empty_column' => FALSE,
+                'responsive' => '',
+              ],
+            ],
+            'default' => '-1',
+            'empty_table' => FALSE,
+          ],
+        ],
+        'fields' => [
+          'entity_browser_select' => [
+            'id' => 'entity_browser_select',
+            'plugin_id' => 'entity_browser_search_api_select',
+            'table' => 'search_api_index_' . $config['search_index'],
+            'field' => 'entity_browser_select',
+            'label' => 'Select',
+          ],
+          'title' => [
+            'id' => 'title',
+            'table' => 'search_api_datasource_' . $config['search_index'] . '_entity_' . $entity_type,
+            'entity_type' => $entity_type,
+            'plugin_id' => 'search_api_field',
+            // TODO: get info!
+            'field' => 'title',
+            'relationship' => 'none',
+            'group_type' => 'group',
+            'label' => 'Title',
+            'type' => 'string',
+            'settings' => [
+              'link_to_entity' => FALSE,
+            ],
+            'field_rendering' => TRUE,
+            'fallback_handler' => 'search_api',
+            'fallback_options' => [
+              'link_to_item' => FALSE,
+              'use_highlighting' => FALSE,
+            ],
+          ],
+        ],
+        'pager' => [
+          'type' => 'full',
+          'options' => [
+            'items_per_page' => 5,
+            'offset' => 0,
+            'id' => 0,
+            'total_pages' => NULL,
+            'expose' => [
+              'items_per_page' => FALSE,
+              'items_per_page_label' => 'Items per page',
+              'items_per_page_options' => '5, 10, 25, 50',
+              'items_per_page_options_all' => FALSE,
+              'items_per_page_options_all_label' => '- All -',
+              'offset' => FALSE,
+              'offset_label' => 'Offset',
+            ],
+            'tags' => [
+              'previous' => '‹ Previous',
+              'next' => 'Next ›',
+              'first' => '« First',
+              'last' => 'Last »',
+            ],
+          ],
+        ],
+      ],
+    ];
   }
 
 }

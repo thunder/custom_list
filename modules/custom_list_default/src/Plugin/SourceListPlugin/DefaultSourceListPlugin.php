@@ -31,6 +31,16 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
   ];
 
   /**
+   * The list of supported consumers.
+   *
+   * @var array
+   */
+  protected $supportedConsumerTypes = [
+    'view',
+    'entity_browser_view',
+  ];
+
+  /**
    * {@inheritdoc}
    */
   public function getForm() {
@@ -207,15 +217,33 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
   }
 
   /**
-   * TODO: Heavy revisit and cleanup, how view config is generated.
-   *
    * {@inheritdoc}
    */
   public function generateConfiguration($consumer_type, array $custom_list_config) {
-    if ($consumer_type !== 'view') {
+    if (!in_array($consumer_type, $this->supportedConsumerTypes)) {
       throw new \RuntimeException('Not supported consumer type.');
     }
 
+    $view_config = $this->getBaseViewConfig($custom_list_config);
+    if ($consumer_type === 'entity_browser_view') {
+      $this->addEntityBrowserDisplay($view_config);
+    }
+
+    return $view_config;
+  }
+
+  /**
+   * Get the base view configuration for this plugin.
+   *
+   * TODO: Heavy revisit and cleanup, how view config is generated.
+   *
+   * @param array $custom_list_config
+   *   Configuration for custom list.
+   *
+   * @return array
+   *   Returns the base view configuration.
+   */
+  protected function getBaseViewConfig(array $custom_list_config) {
     $config = $this->configuration;
     $content_info = explode(':', $config['content_type']);
 
@@ -268,21 +296,6 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
                 "view_mode" => $custom_list_config['view_mode'],
               ],
             ],
-            "sorts" => [],
-            "filters" => [],
-            "header" => [],
-            "footer" => [],
-            "empty" => [],
-            "relationships" => [],
-            "arguments" => [],
-            "display_extenders" => [],
-          ],
-        ],
-        "custom_list_block" => [
-          "display_plugin" => "block",
-          "id" => "custom_list_block",
-          "position" => 1,
-          "display_options" => [
             // TODO: Filters should be fully defined by UI.
             "filters" => [
               "type" => [
@@ -310,15 +323,29 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
                 "group" => 1,
               ],
             ],
-            "defaults" => [
-              "filters" => FALSE,
-              "filter_groups" => FALSE,
-            ],
             "filter_groups" => [
               "operator" => "AND",
               "groups" => [
                 "1" => "AND",
               ],
+            ],
+            "sorts" => [],
+            "header" => [],
+            "footer" => [],
+            "empty" => [],
+            "relationships" => [],
+            "arguments" => [],
+            "display_extenders" => [],
+          ],
+        ],
+        "custom_list_block" => [
+          "display_plugin" => "block",
+          "id" => "custom_list_block",
+          "position" => 1,
+          "display_options" => [
+            "defaults" => [
+              "filters" => TRUE,
+              "filter_groups" => TRUE,
             ],
           ],
           "cache_metadata" => [
@@ -340,6 +367,160 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
     }
 
     return $view_config;
+  }
+
+  /**
+   * Append entity browser display to the base view configuration.
+   */
+  protected function addEntityBrowserDisplay(array &$view_config) {
+    $base_filter = $view_config['display']['default']['display_options']['filters'];
+
+    $source_list_config = $this->configuration;
+    $content_info = explode(':', $source_list_config['content_type']);
+
+    $base_filter += [
+      'title' => [
+        'id' => 'title',
+        'table' => $view_config['base_table'],
+        'entity_type' => $content_info[0],
+        // TODO: get field name.
+        'field' => 'title',
+        'entity_field' => 'title',
+        'plugin_id' => 'string',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'operator' => 'contains',
+        'value' => '',
+        'group' => 1,
+        'exposed' => TRUE,
+        'expose' => [
+          'operator_id' => 'title_op',
+          'label' => 'Title',
+          'use_operator' => FALSE,
+          'operator' => 'title_op',
+          // TODO: get field name.
+          'identifier' => 'title',
+          'required' => FALSE,
+          'remember' => FALSE,
+          'multiple' => FALSE,
+          'remember_roles' => [
+            'authenticated' => 'authenticated',
+            'anonymous' => '0',
+            'administrator' => '0',
+          ],
+          'placeholder' => '',
+        ],
+      ],
+    ];
+
+    $view_config['display']['source_list_display'] = [
+      'display_plugin' => 'source_list_display',
+      'id' => 'source_list_display',
+      'position' => 2,
+      'display_options' => [
+        'defaults' => [
+          'style' => FALSE,
+          'row' => FALSE,
+          'fields' => FALSE,
+          'pager' => FALSE,
+          'filters' => FALSE,
+        ],
+        'style' => [
+          'type' => 'table',
+          'options' => [
+            'grouping' => [],
+            'row_class' => '',
+            'default_row_class' => TRUE,
+            'override' => TRUE,
+            'sticky' => FALSE,
+            'caption' => '',
+            'summary' => '',
+            'description' => '',
+            'columns' => [
+              'entity_browser_select' => 'entity_browser_select',
+              'title' => 'title',
+            ],
+            'info' => [
+              'entity_browser_select' => [
+                'align' => '',
+                'separator' => '',
+                'empty_column' => FALSE,
+                'responsive' => '',
+              ],
+              'title' => [
+                'sortable' => FALSE,
+                'default_sort_order' => 'asc',
+                'align' => '',
+                'separator' => '',
+                'empty_column' => FALSE,
+                'responsive' => '',
+              ],
+            ],
+            'default' => '-1',
+            'empty_table' => FALSE,
+          ],
+        ],
+        'row' => [
+          'type' => 'fields',
+          'options' => [
+            'default_field_elements' => TRUE,
+            'inline' => [],
+            'separator' => '',
+            'hide_empty' => FALSE,
+          ],
+        ],
+        'filters' => $base_filter,
+        'fields' => [
+          'entity_browser_select' => [
+            'id' => 'entity_browser_select',
+            'table' => $content_info[0],
+            'entity_type' => $content_info[0],
+            'field' => 'entity_browser_select',
+            'label' => 'Select',
+            'plugin_id' => 'entity_browser_select',
+          ],
+          'title' => [
+            'id' => 'title',
+            'type' => 'string',
+            'table' => $view_config['base_table'],
+            'entity_type' => $content_info[0],
+            // TODO: get field name.
+            'field' => 'title',
+            'entity_field' => 'title',
+            'label' => 'Title',
+            'settings' => [
+              'link_to_entity' => FALSE,
+            ],
+            'plugin_id' => 'field',
+          ],
+        ],
+        'pager' => [
+          'type' => 'full',
+          'options' => [
+            'items_per_page' => 5,
+            'offset' => 0,
+            'id' => 0,
+            'total_pages' => NULL,
+            'expose' => [
+              'items_per_page' => FALSE,
+              'items_per_page_label' => 'Items per page',
+              'items_per_page_options' => '5, 10, 25, 50',
+              'items_per_page_options_all' => FALSE,
+              'items_per_page_options_all_label' => '- All -',
+              'offset' => FALSE,
+              'offset_label' => 'Offset',
+            ],
+            'tags' => [
+              'previous' => '‹ Previous',
+              'next' => 'Next ›',
+              'first' => '« First',
+              'last' => 'Last »',
+            ],
+          ],
+        ],
+      ],
+    ];
   }
 
   /**

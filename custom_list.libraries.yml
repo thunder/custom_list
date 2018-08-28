@@ -37,3 +37,7 @@ add_source_list:
     js/custom-list-add-source-list.js: {}
   dependencies:
     - core/drupal.ajax
+
+entity_browser_display:
+  js:
+    js/custom-list-entity-browser-display.js: {}
