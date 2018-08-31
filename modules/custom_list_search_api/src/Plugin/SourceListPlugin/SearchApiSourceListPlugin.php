@@ -285,19 +285,24 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
     // Get first entity type, so that we can display title for it.
     // TODO: add support for multiple entity types.
     $entity_type_infos = $this->getEntityTypeInfo();
-    $entity_type = '';
+    $entity_type_id = '';
+    $entity_type_label_field = 'lablel';
     foreach ($entity_type_infos as $entity_type_info) {
-      $entity_type = $entity_type_info['entity_type'];
+      $entity_type_id = $entity_type_info['entity_type'];
+
+      /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
+      $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+      $entity_type_label_field = $entity_type->getKeys()['label'];
 
       break;
     }
 
     $base_filter += [
-      'title' => [
-        'id' => 'title',
+      $entity_type_label_field => [
+        'id' => $entity_type_label_field,
         'plugin_id' => 'search_api_text',
         'table' => 'search_api_index_' . $config['search_index'],
-        'field' => 'title',
+        'field' => $entity_type_label_field,
         'relationship' => 'none',
         'group_type' => 'group',
         'group' => 1,
@@ -315,7 +320,7 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
           'description' => '',
           'use_operator' => FALSE,
           'operator' => 'title_op',
-          'identifier' => 'title',
+          'identifier' => $entity_type_label_field,
           'required' => FALSE,
           'remember' => FALSE,
           'multiple' => FALSE,
@@ -360,7 +365,7 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
             'description' => '',
             'columns' => [
               'entity_browser_select' => 'entity_browser_select',
-              'title' => 'title',
+              $entity_type_label_field => $entity_type_label_field,
             ],
             'info' => [
               'entity_browser_select' => [
@@ -369,7 +374,7 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
                 'empty_column' => FALSE,
                 'responsive' => '',
               ],
-              'title' => [
+              $entity_type_label_field => [
                 'sortable' => FALSE,
                 'default_sort_order' => 'asc',
                 'align' => '',
@@ -390,13 +395,12 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
             'field' => 'entity_browser_select',
             'label' => 'Select',
           ],
-          'title' => [
-            'id' => 'title',
-            'table' => 'search_api_datasource_' . $config['search_index'] . '_entity_' . $entity_type,
-            'entity_type' => $entity_type,
+          $entity_type_label_field => [
+            'id' => $entity_type_label_field,
+            'table' => 'search_api_datasource_' . $config['search_index'] . '_entity_' . $entity_type_id,
+            'entity_type' => $entity_type_id,
             'plugin_id' => 'search_api_field',
-            // TODO: get info!
-            'field' => 'title',
+            'field' => $entity_type_label_field,
             'relationship' => 'none',
             'group_type' => 'group',
             'label' => 'Title',

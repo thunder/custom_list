@@ -378,14 +378,16 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
     $source_list_config = $this->configuration;
     $content_info = explode(':', $source_list_config['content_type']);
 
+    $type_info = $this->getTypeInfo($source_list_config['content_type']);
+    $title_field_name = $type_info->getKeys()['label'];
+
     $base_filter += [
-      'title' => [
-        'id' => 'title',
+      $title_field_name => [
+        'id' => $title_field_name,
         'table' => $view_config['base_table'],
         'entity_type' => $content_info[0],
-        // TODO: get field name.
-        'field' => 'title',
-        'entity_field' => 'title',
+        'field' => $title_field_name,
+        'entity_field' => $title_field_name,
         'plugin_id' => 'string',
         'relationship' => 'none',
         'group_type' => 'group',
@@ -399,8 +401,7 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
           'label' => 'Title',
           'use_operator' => FALSE,
           'operator' => 'title_op',
-          // TODO: get field name.
-          'identifier' => 'title',
+          'identifier' => $title_field_name,
           'required' => FALSE,
           'remember' => FALSE,
           'multiple' => FALSE,
@@ -430,16 +431,12 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
           'type' => 'table',
           'options' => [
             'grouping' => [],
-            'row_class' => '',
             'default_row_class' => TRUE,
             'override' => TRUE,
             'sticky' => FALSE,
-            'caption' => '',
-            'summary' => '',
-            'description' => '',
             'columns' => [
               'entity_browser_select' => 'entity_browser_select',
-              'title' => 'title',
+              $title_field_name => $title_field_name,
             ],
             'info' => [
               'entity_browser_select' => [
@@ -448,7 +445,7 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
                 'empty_column' => FALSE,
                 'responsive' => '',
               ],
-              'title' => [
+              $title_field_name => [
                 'sortable' => FALSE,
                 'default_sort_order' => 'asc',
                 'align' => '',
@@ -480,14 +477,13 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
             'label' => 'Select',
             'plugin_id' => 'entity_browser_select',
           ],
-          'title' => [
-            'id' => 'title',
+          $title_field_name => [
+            'id' => $title_field_name,
             'type' => 'string',
             'table' => $view_config['base_table'],
             'entity_type' => $content_info[0],
-            // TODO: get field name.
-            'field' => 'title',
-            'entity_field' => 'title',
+            'field' => $title_field_name,
+            'entity_field' => $title_field_name,
             'label' => 'Title',
             'settings' => [
               'link_to_entity' => FALSE,
