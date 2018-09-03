@@ -9,6 +9,7 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -68,6 +69,13 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
   protected $sourceListViewModes = [];
 
   /**
+   * The config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * Constructs a new FieldBlock.
    *
    * @param array $configuration
@@ -80,16 +88,19 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
    *   The source list plugin manager service.
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository
    *   The display repository.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger for custom list module.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, SourceListPluginManager $source_list_plugin_manager, EntityDisplayRepositoryInterface $display_repository, EntityTypeManagerInterface $entity_type_manager, LoggerInterface $logger) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, SourceListPluginManager $source_list_plugin_manager, EntityDisplayRepositoryInterface $display_repository, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LoggerInterface $logger) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->sourceListPluginManager = $source_list_plugin_manager;
     $this->displayRepository = $display_repository;
+    $this->configFactory = $config_factory;
     $this->entityTypeManager = $entity_type_manager;
     $this->logger = $logger;
   }
@@ -104,6 +115,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       $plugin_definition,
       $container->get('plugin.manager.source_list_plugin'),
       $container->get('entity_display.repository'),
+      $container->get('config.factory'),
       $container->get('entity_type.manager'),
       $container->get('custom_list.logger')
     );
@@ -435,7 +447,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     // TODO: configurable entity browsers - in some way!
     $insertions_form['entity_browser_selector'] = [
       '#type' => 'entity_browser',
-      '#entity_browser' => 'custom_list',
+      '#entity_browser' => $this->configFactory->get('custom_list.settings')->get('entity_browser'),
       '#widget_context' => [
         'source_list' => $source_list,
       ],
