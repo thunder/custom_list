@@ -40,8 +40,19 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
     'entity_browser_view',
   ];
 
-
+  /**
+   * Temporally store for entity type info in case of frequent fetching.
+   *
+   * @var array
+   */
   protected $entityTypeInfo = NULL;
+
+  /**
+   * The entity type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * {@inheritdoc}
@@ -71,6 +82,20 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
     $build = [];
 
     return $build;
+  }
+
+  /**
+   * Get the entity type manager.
+   *
+   * @return \Drupal\Core\Entity\EntityTypeInterface
+   *   The entity type manager.
+   */
+  public function getEntityTypeManager() {
+    if (empty($this->entityTypeManager)) {
+      $this->entityTypeManager = \Drupal::entityTypeManager();
+    }
+
+    return $this->entityTypeManager;
   }
 
   /**
@@ -290,8 +315,7 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
     foreach ($entity_type_infos as $entity_type_info) {
       $entity_type_id = $entity_type_info['entity_type'];
 
-      /** @var \Drupal\Core\Entity\EntityTypeInterface $entity_type */
-      $entity_type = \Drupal::entityTypeManager()->getDefinition($entity_type_id);
+      $entity_type = $this->entityTypeManager->getDefinition($entity_type_id);
       $entity_type_label_field = $entity_type->getKeys()['label'];
 
       break;

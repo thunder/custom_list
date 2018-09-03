@@ -115,9 +115,14 @@ class SourceList extends WidgetBase {
     // Attach entity browser view library, because it handles exposed filters.
     $form['#attached']['library'][] = 'custom_list/entity_browser_display';
 
-    // TODO: Validate ID!
+    // Get selection view for source list.
     $source_list_id = $this->configuration['source_list'];
     $view_config = $this->getSourceListSelectionView($source_list_id);
+
+    // Fallback to the parent form if source list based view is not available.
+    if (empty($view_config)) {
+      return $form;
+    }
 
     $view = new View($view_config, 'view');
 
