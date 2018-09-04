@@ -6,11 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\entity_browser\Plugin\views\display\EntityBrowser;
 
 /**
- * The plugin that handles entity browser display.
- *
- * "entity_browser_display" is a custom property, used with
- * \Drupal\views\Views::getApplicableViews() to retrieve all views with a
- * 'Entity Browser' display.
+ * The plugin that handles entity browser display for custom list.
  *
  * @ingroup views_display_plugins
  *
@@ -29,8 +25,6 @@ class SourceListDisplay extends EntityBrowser {
    * {@inheritdoc}
    */
   public function ajaxEnabled() {
-    // Force AJAX as this Display Plugin will almost always be embedded inside
-    // EntityBrowserForm, which breaks normal exposed form submits.
     return FALSE;
   }
 
@@ -38,10 +32,6 @@ class SourceListDisplay extends EntityBrowser {
    * {@inheritdoc}
    */
   public function getOption($option) {
-    // @todo remove upon resolution of https://www.drupal.org/node/2904798
-    // This overrides getOption() instead of ajaxEnabled() because
-    // \Drupal\views\Controller\ViewAjaxController::ajaxView() currently calls
-    // that directly.
     if ($option == 'use_ajax') {
       return FALSE;
     }
@@ -56,6 +46,7 @@ class SourceListDisplay extends EntityBrowser {
   protected function defineOptions() {
     $options = parent::defineOptions();
     $options['use_ajax']['default'] = FALSE;
+
     return $options;
   }
 
@@ -74,11 +65,10 @@ class SourceListDisplay extends EntityBrowser {
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
-    // Disable the ability to toggle AJAX support, as we forcibly enable AJAX
-    // in our ajaxEnabled() implementation.
+
     if (isset($form['use_ajax'])) {
       $form['use_ajax'] = [
-        '#description' => $this->t('Entity Browser requires Views to use AJAX.'),
+        '#description' => $this->t('Custom list entity browser view display should not use AJAX.'),
         '#type' => 'checkbox',
         '#title' => $this->t('Use AJAX'),
         '#default_value' => 0,

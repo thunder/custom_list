@@ -97,7 +97,7 @@ class SettingsForm extends ConfigFormBase {
     $form['entity_browser'] = [
       '#type' => 'select',
       '#title' => $this->t('Entity browser'),
-      '#description' => $this->t('The entity browser used for selection of entities for custom list insertion entities'),
+      '#description' => $this->t('The entity browser used for selection of entities for custom list insertion elements'),
       '#options' => $this->getEntityBrowsers(),
       '#default_value' => $config->get('entity_browser'),
     ];

@@ -7,14 +7,14 @@
   'use strict';
 
   /**
-   * Insertion form.
+   * The custom list insertion form.
    *
-   * @type {null}
+   * @type {object}
    */
   Drupal.custom_list.insertion_form = null;
 
   /**
-   *
+   * Attaching events for adding of custom list insertion elements.
    *
    * @type Object
    */

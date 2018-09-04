@@ -24,8 +24,8 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
  *   id = "source_list",
  *   label = @Translation("Source List"),
  *   provider = "views",
- *   description = @Translation("Uses a source list to provide entity listing
- *   in a browser's widget."), auto_select = TRUE
+ *   description = @Translation("Uses a source list to provide entity listing in a browser's widget."),
+ *   auto_select = TRUE
  * )
  */
 class SourceList extends WidgetBase {
@@ -217,6 +217,7 @@ class SourceList extends WidgetBase {
    */
   public static function processCheckbox(&$element, FormStateInterface $form_state, &$complete_form) {
     $element['#checked'] = FALSE;
+
     return $element;
   }
 
