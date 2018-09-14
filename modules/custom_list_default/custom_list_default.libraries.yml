@@ -13,3 +13,15 @@ sort_selector:
       css/custom-list-default-sort-selector.css: {}
   dependencies:
     - custom_list_default/base
+
+filter_selector:
+  js:
+    js/models/FilterModel.js: {}
+    js/views/FilterList.js: {}
+    js/views/FilterForm.js: {}
+    js/custom-list-default-filter-selector.js: {}
+  css:
+    component:
+      css/custom-list-default-filter-selector.css: {}
+  dependencies:
+  - custom_list_default/base
