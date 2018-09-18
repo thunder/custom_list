@@ -400,9 +400,9 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       return [];
     }
 
-    /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $plugin */
+    /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $source_list_plugin */
     try {
-      $plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig());
+      $source_list_plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig());
     }
     catch (PluginException $e) {
       $this->logger->warning(sprintf('Unable to render the block, because the plugin for source list (ID: %s) is not available.', $source_list->id()));
@@ -410,7 +410,11 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       return [];
     }
 
-    $view_config = $plugin->generateConfiguration('view', $custom_list_config);
+    if (!in_array('view', $source_list_plugin->getSupportedConsumers())) {
+      return [];
+    }
+
+    $view_config = $source_list_plugin->generateConfiguration('view', $custom_list_config);
 
     $view = new View($view_config, 'view');
     return $view->getExecutable()->render('custom_list_block');

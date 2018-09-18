@@ -205,6 +205,10 @@ class SourceList extends WidgetBase {
       'view_mode' => 'default',
     ];
 
+    if (!in_array('entity_browser_view', $source_list_plugin->getSupportedConsumers())) {
+      return [];
+    }
+
     return $source_list_plugin->generateConfiguration('entity_browser_view', $custom_list_config);
   }
 

@@ -5,5 +5,4 @@ package: Layout
 core: 8.x
 dependencies:
   - drupal:views
-  - drupal:layout_builder
   - entity_browser:entity_browser

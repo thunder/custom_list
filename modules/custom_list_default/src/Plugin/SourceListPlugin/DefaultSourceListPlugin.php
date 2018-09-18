@@ -31,16 +31,6 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
   ];
 
   /**
-   * The list of supported consumers.
-   *
-   * @var array
-   */
-  protected $supportedConsumerTypes = [
-    'view',
-    'entity_browser_view',
-  ];
-
-  /**
    * {@inheritdoc}
    */
   public function getForm() {
@@ -220,16 +210,22 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
    * {@inheritdoc}
    */
   public function generateConfiguration($consumer_type, array $custom_list_config) {
-    if (!in_array($consumer_type, $this->supportedConsumerTypes)) {
-      throw new \RuntimeException('Not supported consumer type.');
-    }
-
     $view_config = $this->getBaseViewConfig($custom_list_config);
     if ($consumer_type === 'entity_browser_view') {
       $this->addEntityBrowserDisplay($view_config);
     }
 
     return $view_config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedConsumers() {
+    return [
+      'view',
+      'entity_browser_view',
+    ];
   }
 
   /**

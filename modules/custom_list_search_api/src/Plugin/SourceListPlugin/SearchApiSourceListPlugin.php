@@ -31,16 +31,6 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
   protected $viewModes = [];
 
   /**
-   * The list of supported consumers.
-   *
-   * @var array
-   */
-  protected $supportedConsumerTypes = [
-    'view',
-    'entity_browser_view',
-  ];
-
-  /**
    * Temporally store for entity type info in case of frequent fetching.
    *
    * @var array
@@ -184,16 +174,22 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
    * {@inheritdoc}
    */
   public function generateConfiguration($consumer_type, array $custom_list_config) {
-    if (!in_array($consumer_type, $this->supportedConsumerTypes)) {
-      throw new \RuntimeException('Not supported consumer type.');
-    }
-
     $view_config = $this->getBaseViewConfig($custom_list_config);
     if ($consumer_type === 'entity_browser_view') {
       $this->addEntityBrowserDisplay($view_config);
     }
 
     return $view_config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedConsumers() {
+    return [
+      'view',
+      'entity_browser_view',
+    ];
   }
 
   /**
