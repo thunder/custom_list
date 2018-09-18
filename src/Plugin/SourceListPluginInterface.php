@@ -55,4 +55,20 @@ interface SourceListPluginInterface extends PluginInspectionInterface {
    */
   public function generateConfiguration($consumer_type, array $custom_list_config);
 
+  /**
+   * Get list of supported consumers for this source list plugin.
+   *
+   * The consumer list is used to give information about types of configurations
+   * this plugin can provide.
+   *
+   * For example:
+   * - view (for view configuration)
+   * - entity_browser_view (for view configuration for entity browser widget)
+   * etc.
+   *
+   * @return array
+   *   Returns list of supported consumers for source list plugin.
+   */
+  public function getSupportedConsumers();
+
 }

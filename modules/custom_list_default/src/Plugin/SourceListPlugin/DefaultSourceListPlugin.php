@@ -207,15 +207,39 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
   }
 
   /**
-   * TODO: Heavy revisit and cleanup, how view config is generated.
-   *
    * {@inheritdoc}
    */
   public function generateConfiguration($consumer_type, array $custom_list_config) {
-    if ($consumer_type !== 'view') {
-      throw new \RuntimeException('Not supported consumer type.');
+    $view_config = $this->getBaseViewConfig($custom_list_config);
+    if ($consumer_type === 'entity_browser_view') {
+      $this->addEntityBrowserDisplay($view_config);
     }
 
+    return $view_config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSupportedConsumers() {
+    return [
+      'view',
+      'entity_browser_view',
+    ];
+  }
+
+  /**
+   * Get the base view configuration for this plugin.
+   *
+   * TODO: Heavy revisit and cleanup, how view config is generated.
+   *
+   * @param array $custom_list_config
+   *   Configuration for custom list.
+   *
+   * @return array
+   *   Returns the base view configuration.
+   */
+  protected function getBaseViewConfig(array $custom_list_config) {
     $config = $this->configuration;
     $content_info = explode(':', $config['content_type']);
 
@@ -268,21 +292,6 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
                 "view_mode" => $custom_list_config['view_mode'],
               ],
             ],
-            "sorts" => [],
-            "filters" => [],
-            "header" => [],
-            "footer" => [],
-            "empty" => [],
-            "relationships" => [],
-            "arguments" => [],
-            "display_extenders" => [],
-          ],
-        ],
-        "custom_list_block" => [
-          "display_plugin" => "block",
-          "id" => "custom_list_block",
-          "position" => 1,
-          "display_options" => [
             // TODO: Filters should be fully defined by UI.
             "filters" => [
               "type" => [
@@ -310,15 +319,29 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
                 "group" => 1,
               ],
             ],
-            "defaults" => [
-              "filters" => FALSE,
-              "filter_groups" => FALSE,
-            ],
             "filter_groups" => [
               "operator" => "AND",
               "groups" => [
                 "1" => "AND",
               ],
+            ],
+            "sorts" => [],
+            "header" => [],
+            "footer" => [],
+            "empty" => [],
+            "relationships" => [],
+            "arguments" => [],
+            "display_extenders" => [],
+          ],
+        ],
+        "custom_list_block" => [
+          "display_plugin" => "block",
+          "id" => "custom_list_block",
+          "position" => 1,
+          "display_options" => [
+            "defaults" => [
+              "filters" => TRUE,
+              "filter_groups" => TRUE,
             ],
           ],
           "cache_metadata" => [
@@ -340,6 +363,156 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
     }
 
     return $view_config;
+  }
+
+  /**
+   * Append entity browser display to the base view configuration.
+   */
+  protected function addEntityBrowserDisplay(array &$view_config) {
+    $base_filter = $view_config['display']['default']['display_options']['filters'];
+
+    $source_list_config = $this->configuration;
+    $content_info = explode(':', $source_list_config['content_type']);
+
+    $type_info = $this->getTypeInfo($source_list_config['content_type']);
+    $title_field_name = $type_info->getKeys()['label'];
+
+    $base_filter += [
+      $title_field_name => [
+        'id' => $title_field_name,
+        'table' => $view_config['base_table'],
+        'entity_type' => $content_info[0],
+        'field' => $title_field_name,
+        'entity_field' => $title_field_name,
+        'plugin_id' => 'string',
+        'relationship' => 'none',
+        'group_type' => 'group',
+        'admin_label' => '',
+        'operator' => 'contains',
+        'value' => '',
+        'group' => 1,
+        'exposed' => TRUE,
+        'expose' => [
+          'operator_id' => 'title_op',
+          'label' => 'Title',
+          'use_operator' => FALSE,
+          'operator' => 'title_op',
+          'identifier' => $title_field_name,
+          'required' => FALSE,
+          'remember' => FALSE,
+          'multiple' => FALSE,
+          'remember_roles' => [
+            'authenticated' => 'authenticated',
+            'anonymous' => '0',
+            'administrator' => '0',
+          ],
+          'placeholder' => '',
+        ],
+      ],
+    ];
+
+    $view_config['display']['source_list_display'] = [
+      'display_plugin' => 'source_list_display',
+      'id' => 'source_list_display',
+      'position' => 2,
+      'display_options' => [
+        'defaults' => [
+          'style' => FALSE,
+          'row' => FALSE,
+          'fields' => FALSE,
+          'pager' => FALSE,
+          'filters' => FALSE,
+        ],
+        'style' => [
+          'type' => 'table',
+          'options' => [
+            'grouping' => [],
+            'default_row_class' => TRUE,
+            'override' => TRUE,
+            'sticky' => FALSE,
+            'columns' => [
+              'entity_browser_select' => 'entity_browser_select',
+              $title_field_name => $title_field_name,
+            ],
+            'info' => [
+              'entity_browser_select' => [
+                'align' => '',
+                'separator' => '',
+                'empty_column' => FALSE,
+                'responsive' => '',
+              ],
+              $title_field_name => [
+                'sortable' => FALSE,
+                'default_sort_order' => 'asc',
+                'align' => '',
+                'separator' => '',
+                'empty_column' => FALSE,
+                'responsive' => '',
+              ],
+            ],
+            'default' => '-1',
+            'empty_table' => FALSE,
+          ],
+        ],
+        'row' => [
+          'type' => 'fields',
+          'options' => [
+            'default_field_elements' => TRUE,
+            'inline' => [],
+            'separator' => '',
+            'hide_empty' => FALSE,
+          ],
+        ],
+        'filters' => $base_filter,
+        'fields' => [
+          'entity_browser_select' => [
+            'id' => 'entity_browser_select',
+            'table' => $content_info[0],
+            'entity_type' => $content_info[0],
+            'field' => 'entity_browser_select',
+            'label' => 'Select',
+            'plugin_id' => 'entity_browser_select',
+          ],
+          $title_field_name => [
+            'id' => $title_field_name,
+            'type' => 'string',
+            'table' => $view_config['base_table'],
+            'entity_type' => $content_info[0],
+            'field' => $title_field_name,
+            'entity_field' => $title_field_name,
+            'label' => 'Title',
+            'settings' => [
+              'link_to_entity' => FALSE,
+            ],
+            'plugin_id' => 'field',
+          ],
+        ],
+        'pager' => [
+          'type' => 'full',
+          'options' => [
+            'items_per_page' => 5,
+            'offset' => 0,
+            'id' => 0,
+            'total_pages' => NULL,
+            'expose' => [
+              'items_per_page' => FALSE,
+              'items_per_page_label' => 'Items per page',
+              'items_per_page_options' => '5, 10, 25, 50',
+              'items_per_page_options_all' => FALSE,
+              'items_per_page_options_all_label' => '- All -',
+              'offset' => FALSE,
+              'offset_label' => 'Offset',
+            ],
+            'tags' => [
+              'previous' => '‹ Previous',
+              'next' => 'Next ›',
+              'first' => '« First',
+              'last' => 'Last »',
+            ],
+          ],
+        ],
+      ],
+    ];
   }
 
   /**

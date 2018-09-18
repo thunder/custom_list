@@ -1,0 +1,27 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - views
+name: custom_list
+label: 'Custom list'
+display: modal
+display_configuration:
+  width: '700'
+  height: '520'
+  link_text: 'Add insertion entity'
+  auto_open: false
+selection_display: no_display
+selection_display_configuration: {  }
+widget_selector: tabs
+widget_selector_configuration: {  }
+widgets:
+  ae742b59-3b70-4963-a8a5-78d882d289f4:
+    settings:
+      source_list: 'NULL'
+      submit_text: 'Select entities'
+      auto_select: false
+    uuid: ae742b59-3b70-4963-a8a5-78d882d289f4
+    weight: 1
+    label: 'Source list entities'
+    id: source_list

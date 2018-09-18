@@ -9,6 +9,7 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -68,6 +69,13 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
   protected $sourceListViewModes = [];
 
   /**
+   * The config factory service.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * Constructs a new FieldBlock.
    *
    * @param array $configuration
@@ -80,16 +88,19 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
    *   The source list plugin manager service.
    * @param \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository
    *   The display repository.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory service.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger for custom list module.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, SourceListPluginManager $source_list_plugin_manager, EntityDisplayRepositoryInterface $display_repository, EntityTypeManagerInterface $entity_type_manager, LoggerInterface $logger) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, SourceListPluginManager $source_list_plugin_manager, EntityDisplayRepositoryInterface $display_repository, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, LoggerInterface $logger) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->sourceListPluginManager = $source_list_plugin_manager;
     $this->displayRepository = $display_repository;
+    $this->configFactory = $config_factory;
     $this->entityTypeManager = $entity_type_manager;
     $this->logger = $logger;
   }
@@ -104,6 +115,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       $plugin_definition,
       $container->get('plugin.manager.source_list_plugin'),
       $container->get('entity_display.repository'),
+      $container->get('config.factory'),
       $container->get('entity_type.manager'),
       $container->get('custom_list.logger')
     );
@@ -202,9 +214,6 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
           'custom-list__add-source-list',
         ],
         'data-dialog-type' => 'modal',
-        'data-dialog-options' => Json::encode([
-          'width' => 700,
-        ]),
       ],
     ];
 
@@ -223,7 +232,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     ];
 
     $custom_list_config_form['unique_entities'] = $this->getUniqueSelector($preselection['unique_entities']);
-    $custom_list_config_form['insertions'] = $this->getInsertionsForm($preselection['insertions']);
+    $custom_list_config_form['insertions'] = $this->getInsertionsForm($preselection['insertions'], $preselection['source_list']);
 
     $form['custom_list_config_form'] = $custom_list_config_form;
 
@@ -275,6 +284,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
 
     $result->addCommand(new ReplaceCommand('.form-item-settings-custom-list-config-form-source-list', $form['settings']['custom_list_config_form']['source_list']));
     $result->addCommand(new ReplaceCommand('.form-item-settings-custom-list-config-form-view-mode', $form['settings']['custom_list_config_form']['view_mode']));
+    $result->addCommand(new ReplaceCommand('[data-drupal-selector="edit-settings-custom-list-config-form-insertions-entity-browser-selector-entity-browser"]', $form['settings']['custom_list_config_form']['insertions']['entity_browser_selector']));
 
     return $result;
   }
@@ -390,9 +400,9 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       return [];
     }
 
-    /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $plugin */
+    /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $source_list_plugin */
     try {
-      $plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig());
+      $source_list_plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig());
     }
     catch (PluginException $e) {
       $this->logger->warning(sprintf('Unable to render the block, because the plugin for source list (ID: %s) is not available.', $source_list->id()));
@@ -400,7 +410,11 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       return [];
     }
 
-    $view_config = $plugin->generateConfiguration('view', $custom_list_config);
+    if (!in_array('view', $source_list_plugin->getSupportedConsumers())) {
+      return [];
+    }
+
+    $view_config = $source_list_plugin->generateConfiguration('view', $custom_list_config);
 
     $view = new View($view_config, 'view');
     return $view->getExecutable()->render('custom_list_block');
@@ -411,11 +425,13 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
    *
    * @param array $selection
    *   Existing selection of entities.
+   * @param string $source_list
+   *   The source list ID.
    *
    * @return array
    *   Returns form elements.
    */
-  protected function getInsertionsForm(array $selection) {
+  protected function getInsertionsForm(array $selection, $source_list) {
     $insertions_form = [];
 
     $insertions_form['insertion_selection'] = [
@@ -435,7 +451,13 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     // TODO: configurable entity browsers - in some way!
     $insertions_form['entity_browser_selector'] = [
       '#type' => 'entity_browser',
-      '#entity_browser' => 'custom_list_articles',
+      '#entity_browser' => $this->configFactory->get('custom_list.settings')->get('entity_browser'),
+      '#widget_context' => [
+        'source_list' => $source_list,
+      ],
+      '#attributes' => [
+        'class' => ['custom-list__entity-browser-selector'],
+      ],
     ];
 
     $insertions_form['add_block'] = [

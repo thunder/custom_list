@@ -12,3 +12,13 @@ custom_list.add_block:
     _form: '\Drupal\custom_list\Form\AddBlockForm'
   requirements:
     _permission: 'administer blocks'
+
+custom_list.settings_form:
+  path: '/admin/config/custom_list/settings'
+  defaults:
+    _form: '\Drupal\custom_list\Form\SettingsForm'
+    _title: 'SettingsForm'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE

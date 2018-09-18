@@ -1,0 +1,20 @@
+custom_list.settings:
+  type: config_object
+  mapping:
+    entity_browser:
+      type: string
+      label: 'The entity browser used for selection of insertion entities'
+
+entity_browser.browser.widget.source_list:
+  type: mapping
+  label: 'Custom list source list widget configuration'
+  mapping:
+    submit_text:
+      type: string
+      label: 'Submit button text'
+    auto_select:
+      type: boolean
+      label: 'Automatically submit selection'
+    source_list:
+      type: string
+      label: 'The source list ID is always provided by entity browser element'

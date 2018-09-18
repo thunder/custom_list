@@ -6,3 +6,11 @@ entity.source_list.collection:
   description: 'Source List entities'
   parent: system.admin_structure
   weight: 100
+
+# Custom list settings form
+custom_list.settings_form:
+  title: 'Custom list settings'
+  route_name: custom_list.settings_form
+  description: 'Custom list settings form'
+  parent: system.admin_config_content
+  weight: 99
