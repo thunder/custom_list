@@ -28,6 +28,7 @@
   border: 1px solid gray;
   padding-left: 5px;
   flex: 1;
+  display: flex;
   overflow: hidden;
 }
 
@@ -40,7 +41,42 @@
   width: 100%;
 }
 
-.custom-list-default__filter-row__edit-value {
+.custom-list-default__filter-row__value > div {
+  flex: 1;
+  display: flex;
+}
+
+/**
+ * Filter Form: String, Language, Numeric
+ */
+.custom-list-default__filter-form__string,
+.custom-list-default__filter-form__boolean,
+.custom-list-default__filter-form__language,
+.custom-list-default__filter-form__taxonomy,
+.custom-list-default__filter-form__user,
+.custom-list-default__filter-form__numeric,
+.custom-list-default__filter-form__date {
+  flex: 1;
+  display: flex;
+}
+
+.custom-list-default__filter-form__string span,
+.custom-list-default__filter-form__boolean span,
+.custom-list-default__filter-form__language span,
+.custom-list-default__filter-form__taxonomy span,
+.custom-list-default__filter-form__user span,
+.custom-list-default__filter-form__numeric span,
+.custom-list-default__filter-form__date span {
+  flex: 1;
+}
+
+.custom-list-default__filter-form__string__edit-value,
+.custom-list-default__filter-form__boolean__edit-value,
+.custom-list-default__filter-form__language__edit-value,
+.custom-list-default__filter-form__taxonomy__edit-value,
+.custom-list-default__filter-form__user__edit-value,
+.custom-list-default__filter-form__numeric__edit-value,
+.custom-list-default__filter-form__date__edit-value {
   display: block;
   position: absolute;
   z-index: 1001;

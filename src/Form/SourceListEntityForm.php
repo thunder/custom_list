@@ -113,7 +113,7 @@ class SourceListEntityForm extends ContentEntityForm {
     try {
       $plugin_instance = $this->sourceListPluginManager->createInstance($preselected_plugin_id, $entity->getConfig());
 
-      $form['plugin_subform'] = $plugin_instance->getForm();
+      $form['plugin_subform'] = $plugin_instance->getForm($form, $form_state);
       $form['plugin_subform']['#type'] = 'container';
       $form['plugin_subform']['#attributes']['class'][] = 'custom-list__plugin-subform';
     }

@@ -17,6 +17,15 @@ sort_selector:
 filter_selector:
   js:
     js/models/FilterModel.js: {}
+    js/filter_forms/NoneFilterForm.js: {}
+    js/filter_forms/SingleValueFilterForm.js: {}
+    js/filter_forms/StringFilterForm.js: {}
+    js/filter_forms/BooleanFilterForm.js: {}
+    js/filter_forms/LanguageFilterForm.js: {}
+    js/filter_forms/TaxonomyFilterForm.js: {}
+    js/filter_forms/UserFilterForm.js: {}
+    js/filter_forms/NumericFilterForm.js: {}
+    js/filter_forms/DateFilterForm.js: {}
     js/views/FilterList.js: {}
     js/views/FilterForm.js: {}
     js/custom-list-default-filter-selector.js: {}

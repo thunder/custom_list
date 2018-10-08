@@ -85,7 +85,7 @@
       var value = this.inputPosition.val();
 
       if (!value) {
-        this.clear();
+        this.model.set('position', this.model.collection.length);
       }
       else {
         this.model.set('position', parseInt(value, 10) - 1);

@@ -8,7 +8,9 @@
 
   // Init namespace.
   if (typeof Drupal.custom_list_default === 'undefined') {
-    Drupal.custom_list_default = {};
+    Drupal.custom_list_default = {
+      filter_forms: {}
+    };
   }
 
 })(jQuery, Drupal);

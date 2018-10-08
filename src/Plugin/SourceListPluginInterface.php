@@ -13,10 +13,15 @@ interface SourceListPluginInterface extends PluginInspectionInterface {
   /**
    * Creates sub-form render array.
    *
+   * @param array $form
+   *   Form array.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state object.
+   *
    * @return array
    *   Returns sub-form array.
    */
-  public function getForm();
+  public function getForm(array $form, FormStateInterface $form_state);
 
   /**
    * Get configuration for source plugin sub-form.

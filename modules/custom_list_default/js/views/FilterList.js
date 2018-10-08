@@ -2,7 +2,7 @@
  * @file FilterList.js
  */
 
-(function ($, Drupal, Backbone) {
+(function ($, _, Drupal, Backbone) {
 
   'use strict';
 
@@ -12,10 +12,9 @@
       '<div class="custom-list-default__filter-row">' +
       '  <div class="custom-list-default__filter-row__filter_id"><%= tplFilterSelector(filter_id) %></div>' +
       '  <div class="custom-list-default__filter-row__operator"><%= tplOperatorSelector(filter_id, operator) %></div>' +
-      '  <div class="custom-list-default__filter-row__value"><%- value %></div>' +
+      '  <div class="custom-list-default__filter-row__value"></div>' +
       '  <div><a class="custom-list-default__filter-row__remove">' + Drupal.t('Remove') + '</a></div>' +
-      '</div>' +
-      '<input class="custom-list-default__filter-row__edit-value" style="display: none;" type="text" value="<%- value %>" />'
+      '</div>'
     ),
 
     templateHelpers: {
@@ -23,7 +22,7 @@
         // Create HTML for filter field selection.
         var select = '<select class="custom-list-default__filter-row__filter_id_selection">';
         $.each(this.filterOptions.filter, function (filterId, filter) {
-          select += '<option value="' + filterId + '" ' + ((filterId === selectedFilterId) ? 'selected' : '') + '>' + filter.field + '</option>';
+          select += '<option value="' + filterId + '" ' + ((filterId === selectedFilterId) ? 'selected' : '') + '>' + filter.title + '</option>';
         });
         select += '</select>';
 
@@ -44,10 +43,7 @@
     events: {
       'click a.custom-list-default__filter-row__remove': 'removeModel',
       'change .custom-list-default__filter-row__filter_id_selection': 'changeField',
-      'change .custom-list-default__filter-row__operator_selection': 'changeOperator',
-      'click .custom-list-default__filter-row__value': 'editValue',
-      'keypress .custom-list-default__filter-row__edit-value': 'updateValueOnEnter',
-      'blur .custom-list-default__filter-row__edit-value': 'closeEditValue'
+      'change .custom-list-default__filter-row__operator_selection': 'changeOperator'
     },
 
     initialize: function () {
@@ -64,6 +60,7 @@
     },
 
     render: function () {
+      // Render main view.
       var data = this.model.toJSON();
       var render = this.template(_.extend(data, this.templateHelpers));
 
@@ -71,9 +68,27 @@
 
       this.$el.html(render);
 
-      this.inputValue = this.$('.custom-list-default__filter-row__edit-value');
+      // Render sub-view.
+      var filterValue = this.getFilterValueView(data.filter_id);
+      this.$('.custom-list-default__filter-row__value').append(filterValue.render().el);
 
       return this;
+    },
+
+    getFilterValueView: function(filter_id) {
+      var filterInfo = this.templateHelpers.filterOptions.filter[filter_id].form_info;
+
+      if (!_.isEmpty(filterInfo)) {
+        var filterFormId = filterInfo.id;
+
+        if (Drupal.custom_list_default.filter_forms[filterFormId]) {
+          return new Drupal.custom_list_default.filter_forms[filterFormId]({
+            model: this.model
+          });
+        }
+      }
+
+      return new Drupal.custom_list_default.filter_forms.None();
     },
 
     changeField: function (event) {
@@ -81,6 +96,7 @@
       var value = $(event.target).val();
 
       me.model.set('filter_id', value);
+      me.model.set('value', '');
 
       // Get first operator for selected field ID.
       $.each(me.templateHelpers.filterOptions.filter[value].operators, function (operator_id) {
@@ -99,39 +115,6 @@
       this.model.trigger('change', this.model);
     },
 
-    editValue: function (event) {
-      var $target = $(event.target);
-
-      var cssConfig = $target.position();
-      cssConfig.top = cssConfig.top - 1;
-      cssConfig.width = $target.width();
-      cssConfig.height = $target.height() + 2;
-
-      this.inputValue.css(cssConfig).show().focus().select();
-    },
-
-    closeEditValue: function () {
-      var value = this.inputValue.val();
-
-      if (!value) {
-        this.clear();
-      }
-      else {
-        this.model.set('value', value);
-      }
-
-      this.inputValue.hide();
-    },
-
-    updateValueOnEnter: function (e) {
-      if (e.keyCode === 13) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        this.closeEditValue();
-      }
-    },
-
     removeModel: function () {
       // We need collection from model before we get values after destroying model.
       var collection = this.model.collection;
@@ -142,4 +125,4 @@
     }
   });
 
-})(jQuery, Drupal, Backbone);
+})(jQuery, _, Drupal, Backbone);

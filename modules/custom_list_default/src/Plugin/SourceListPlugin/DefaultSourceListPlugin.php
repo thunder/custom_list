@@ -25,7 +25,7 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
    *
    * @var array
    */
-  protected $supportedEntityTypes = [
+  protected static $supportedEntityTypes = [
     'node',
     'media',
   ];
@@ -40,12 +40,16 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getForm() {
+  public function getForm(array $form, FormStateInterface $form_state) {
     // Sub-form will be created for custom list form.
     $custom_list_config_form = [];
 
     // Get pre-selections.
     $preselected_content_type = (!empty($this->configuration['content_type'])) ? $this->configuration['content_type'] : 'node:article';
+    if ($form_state->getValue('content_type')) {
+      $preselected_content_type = $form_state->getValue('content_type');
+    }
+
     $preselected_sorts = (!empty($this->configuration['sort_selection'])) ? $this->configuration['sort_selection'] : [];
     $preselected_filters = (!empty($this->configuration['filter_selection'])) ? $this->configuration['filter_selection'] : [];
 
@@ -132,7 +136,7 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
 
     $bundles = $bundle_info_service->getAllBundleInfo();
     foreach ($bundles as $entity_type_id => $bundle_infos) {
-      if (in_array($entity_type_id, $this->supportedEntityTypes)) {
+      if (in_array($entity_type_id, static::$supportedEntityTypes)) {
         foreach ($bundle_infos as $bundle_id => $bundle_info) {
           $content_options[$entity_type_id . ':' . $bundle_id] = $bundle_info['label'];
         }
@@ -205,17 +209,34 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
     $data_table = $type_info->getDataTable();
     $options = Views::viewsDataHelper()->fetchFields([$data_table], 'filter');
 
-    // TODO: We need information about field type.
+    /** @var \Drupal\custom_list_default\FilterFormResolverInterface $filter_form_resolver */
+    $filter_form_resolver = \Drupal::service('custom_list_default.filter_form_resolver');
+
+    // Status, bundle and custom list filters are programmatically added.
+    $skip_fields = [
+      'custom_list_default',
+      $type_info->getKey('status'),
+      $type_info->getKey('bundle'),
+    ];
+
     $filter_options = [];
     foreach ($options as $option_id => $option) {
-      if (strpos($option_id, $data_table . '.') === 0) {
-        $field_info = explode('.', $option_id);
-
-        $filter_options[$option_id] = $this->getFilterOption($field_info[0], $field_info[1]);
-
-        $handler = $this->getFilterHandler($filter_options[$option_id]);
-        $filter_options[$option_id]['operators'] = $handler->operatorOptions();
+      if (strpos($option_id, $data_table . '.') !== 0) {
+        continue;
       }
+
+      $field_info = explode('.', $option_id);
+      if (in_array($field_info[1], $skip_fields)) {
+        continue;
+      }
+
+      $filter_options[$option_id] = $this->getFilterOption($field_info[0], $field_info[1]);
+
+      $handler = $this->getFilterHandler($filter_options[$option_id]);
+      $filter_options[$option_id]['operators'] = $handler->operatorOptions();
+
+      $filter_options[$option_id]['title'] = isset($handler->definition['title']) ? $handler->definition['title'] : $option_id;
+      $filter_options[$option_id]['form_info'] = $filter_form_resolver->getFormInfo($handler);
     }
 
     return $filter_options;
@@ -680,25 +701,9 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
 
     $filter = $this->getFilterOption($column_info[0], $column_info[1]);
 
-    /** @var \Drupal\views\Plugin\views\filter\FilterPluginBase $handler */
-    $handler = $this->getFilterHandler($filter);
-
     // In order to find does filter support array formatted values or only
     // single value, we have to do some unconventional checks.
-    $filter['value'] = $filter_info['value'];
-    if (method_exists($handler, 'operators')) {
-      $operators = $handler->operators();
-
-      $operator_info = $operators[$filter_info['operator']];
-      if (isset($operator_info['short']) && isset($operator_info['short_single'])) {
-        $filter['value'] = [];
-        $values = explode(',', $filter_info['value']);
-        foreach ($values as $value) {
-          $filter['value'][$value] = $value;
-        }
-      }
-    }
-
+    $filter['value'] = json_decode($filter_info['value'], TRUE);
     $filter['operator'] = $filter_info['operator'];
 
     $filters[$filter_info['filter_id']] = $filter;
