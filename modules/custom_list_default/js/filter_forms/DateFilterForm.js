@@ -24,7 +24,8 @@
 
         if (dateValue.value) {
           return dateValue.value;
-        } else {
+        }
+        else {
           return dateValue.min + ',' + dateValue.max;
         }
       }
@@ -74,8 +75,9 @@
         if (valueParts.length === 2) {
           dateValue.min = valueParts[0].trim();
           dateValue.max = valueParts[1].trim();
-        } else {
-          dateValue.value = valueParts[0].trim()
+        }
+        else {
+          dateValue.value = valueParts[0].trim();
         }
 
         this.model.set('value', JSON.stringify(dateValue));

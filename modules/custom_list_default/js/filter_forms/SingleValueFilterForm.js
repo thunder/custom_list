@@ -10,7 +10,7 @@
 
   Drupal.custom_list_default.filter_forms.SingleValueFilterForm = Backbone.View.extend({
     template: _.template(Drupal.t('The single value filter form should be extended.')),
-    getInputElement: function() {},
+    getInputElement: function () {},
 
     templateHelpers: {
       tplGetValue: function (value) {
@@ -38,7 +38,7 @@
       this.inputValue.css(cssConfig).show().focus().select();
     },
 
-    getValue: function(value) {
+    getValue: function (value) {
       return value;
     },
 

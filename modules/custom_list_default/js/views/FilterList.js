@@ -75,7 +75,7 @@
       return this;
     },
 
-    getFilterValueView: function(filter_id) {
+    getFilterValueView: function (filter_id) {
       var filterInfo = this.templateHelpers.filterOptions.filter[filter_id].form_info;
 
       if (!_.isEmpty(filterInfo)) {

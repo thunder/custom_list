@@ -24,7 +24,8 @@
 
         if (numericValue.value) {
           return numericValue.value;
-        } else {
+        }
+        else {
           return numericValue.min + ',' + numericValue.max;
         }
       }
@@ -73,8 +74,9 @@
         if (valueParts.length === 2) {
           numericValue.min = valueParts[0].trim();
           numericValue.max = valueParts[1].trim();
-        } else {
-          numericValue.value = valueParts[0].trim()
+        }
+        else {
+          numericValue.value = valueParts[0].trim();
         }
 
         this.model.set('value', JSON.stringify(numericValue));

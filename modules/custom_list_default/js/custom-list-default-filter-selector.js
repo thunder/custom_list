@@ -35,7 +35,8 @@
         $form.after(form.render().el);
 
         Drupal.custom_list_default.filter_list_form = form;
-      } else if ($(context).hasClass('custom-list-default__default-source-list-plugin__options')) {
+      }
+      else if ($(context).hasClass('custom-list-default__default-source-list-plugin__options')) {
         Drupal.custom_list_default.filter_list_form.clearForm();
       }
     }

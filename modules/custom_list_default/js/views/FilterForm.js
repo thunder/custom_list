@@ -43,7 +43,7 @@
       this.collection.set(JSON.parse(dataElement.val()));
     },
 
-    getFilterOptions: function() {
+    getFilterOptions: function () {
       return JSON.parse($('.custom-list-default__default-source-list-plugin__options').val());
     },
 
@@ -91,15 +91,15 @@
       this.collection.each(this.addOne, this);
     },
 
-    persistForm: function() {
+    persistForm: function () {
       $('.custom-list-default__default-source-list-plugin__filter_selection').val(this.collection.toJSON());
     },
 
-    clearForm: function() {
+    clearForm: function () {
       var allModels = this.collection.models;
       var i;
 
-      for (i=allModels.length - 1; i>=0; i--) {
+      for (i = allModels.length - 1; i >= 0; i--) {
         allModels[i].destroy();
       }
 

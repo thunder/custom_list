@@ -13,7 +13,7 @@
       '  <input class="custom-list-default__filter-form__string__edit-value" style="display: none;" type="text" value="<%- tplGetValue(value) %>" />' +
       '</div>'
     ),
-    getInputElement: function() {
+    getInputElement: function () {
       return this.$('.custom-list-default__filter-form__string__edit-value');
     },
 

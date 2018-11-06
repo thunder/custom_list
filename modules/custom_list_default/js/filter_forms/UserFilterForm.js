@@ -60,7 +60,7 @@
         var valueParts = value.split(',');
 
         var userValue = [];
-        $.each(valueParts, function(index, userId) {
+        $.each(valueParts, function (index, userId) {
           userValue.push(userId.trim());
         });
 

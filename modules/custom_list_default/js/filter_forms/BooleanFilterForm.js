@@ -14,7 +14,7 @@
       '</div>'
     ),
 
-    getInputElement: function() {
+    getInputElement: function () {
       return this.$('.custom-list-default__filter-form__boolean__edit-value');
     },
 
@@ -24,7 +24,7 @@
       'blur .custom-list-default__filter-form__boolean__edit-value': 'closeEditValue'
     },
 
-    getValue: function(value) {
+    getValue: function (value) {
       return parseInt(value, 10);
     }
   });
