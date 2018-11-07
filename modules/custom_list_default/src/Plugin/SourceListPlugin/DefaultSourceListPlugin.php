@@ -215,8 +215,8 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
     // Status, bundle and custom list filters are programmatically added.
     $skip_fields = [
       'custom_list_default',
-      $type_info->getKey('status'),
       $type_info->getKey('bundle'),
+      $type_info->getKey('published'),
     ];
 
     $filter_options = [];

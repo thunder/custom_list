@@ -6,26 +6,26 @@
 
   'use strict';
 
-  Drupal.custom_list_default.filter_forms.Boolean = Drupal.custom_list_default.filter_forms.SingleValueFilterForm.extend({
+  Drupal.custom_list_default.filter_forms.Boolean = Backbone.View.extend({
     template: _.template(
       '<div class="custom-list-default__filter-form__boolean">' +
-      '  <span><%- tplGetValue(value) %></span>' +
-      '  <input class="custom-list-default__filter-form__boolean__edit-value" style="display: none;" type="text" value="<%- tplGetValue(value) %>" />' +
+      '  <span>' + Drupal.t('True') + '</span>' +
       '</div>'
     ),
 
-    getInputElement: function () {
-      return this.$('.custom-list-default__filter-form__boolean__edit-value');
+    initialize: function () {
+      var defaultValue = JSON.stringify(1);
+
+      if (this.model.get('value') !== defaultValue) {
+        this.model.set('value', defaultValue);
+      }
     },
 
-    events: {
-      'click span': 'editValue',
-      'keypress .custom-list-default__filter-form__boolean__edit-value': 'updateValueOnEnter',
-      'blur .custom-list-default__filter-form__boolean__edit-value': 'closeEditValue'
-    },
+    render: function () {
+      var render = this.template(this.model.toJSON());
+      this.setElement(render);
 
-    getValue: function (value) {
-      return parseInt(value, 10);
+      return this;
     }
   });
 

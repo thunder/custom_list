@@ -112,6 +112,8 @@
       var value = $(event.target).val();
 
       this.model.set('operator', value);
+      this.model.set('value', '');
+
       this.model.trigger('change', this.model);
     },
 

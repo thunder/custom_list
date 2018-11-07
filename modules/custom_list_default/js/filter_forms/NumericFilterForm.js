@@ -8,91 +8,78 @@
 
   Drupal.custom_list_default.filter_forms.Numeric = Backbone.View.extend({
     template: _.template(
-      '<div class="custom-list-default__filter-form__numeric">' +
-      '  <span><%- tplGetValue(value) %></span>' +
-      '  <input class="custom-list-default__filter-form__numeric__edit-value" style="display: none;" type="text" value="<%- tplGetValue(value) %>" />' +
+      '<div class="custom-list-default__filter-form__date">' +
+      '  <%= tplGetFields(operator, value) %>' +
       '</div>'
     ),
 
     templateHelpers: {
-      tplGetValue: function (value) {
+      tplGetFields: function (operator, value) {
+        var inputElements = '';
+        var parsedValue = {};
+
         if (_.isEmpty(value)) {
-          return value;
-        }
-
-        var numericValue = JSON.parse(value);
-
-        if (numericValue.value) {
-          return numericValue.value;
+          parsedValue = {
+            value: '',
+            min: '',
+            max: ''
+          };
         }
         else {
-          return numericValue.min + ',' + numericValue.max;
+          parsedValue = JSON.parse(value);
         }
+
+        if (operator === 'regular_expression') {
+          inputElements += '<input class="custom-list-default__filter-form__numeric__edit-regex" type="text" value="' + parsedValue.value + '" />';
+        }
+        else if (operator === 'between' || operator === 'not between') {
+          inputElements += '<input class="custom-list-default__filter-form__numeric__edit-min" type="number" value="' + parsedValue.min + '" />';
+          inputElements += '<input class="custom-list-default__filter-form__numeric__edit-max" type="number" value="' + parsedValue.max + '" />';
+        }
+        else {
+          inputElements += '<input class="custom-list-default__filter-form__numeric__edit-value" type="number" value="' + parsedValue.value + '" />';
+        }
+
+        return inputElements;
       }
     },
 
     events: {
-      'click span': 'editValue',
-      'keypress .custom-list-default__filter-form__numeric__edit-value': 'updateValueOnEnter',
-      'blur .custom-list-default__filter-form__numeric__edit-value': 'closeEditValue'
+      'blur .custom-list-default__filter-form__numeric__edit-regex': 'updateValue',
+      'blur .custom-list-default__filter-form__numeric__edit-min': 'updateValue',
+      'blur .custom-list-default__filter-form__numeric__edit-max': 'updateValue',
+      'blur .custom-list-default__filter-form__numeric__edit-value': 'updateValue'
     },
 
     render: function () {
       var render = this.template(_.extend(this.model.toJSON(), this.templateHelpers));
       this.setElement(render);
 
-      this.inputValue = this.$('.custom-list-default__filter-form__numeric__edit-value');
-
       return this;
     },
 
-    editValue: function (event) {
-      var $target = $(event.target);
+    updateValue: function () {
+      var operator = this.model.get('operator');
+      var numericValue = {
+        min: '',
+        max: '',
+        value: ''
+      };
 
-      var cssConfig = $target.position();
-      cssConfig.top = cssConfig.top - 1;
-      cssConfig.width = $target.width();
-      cssConfig.height = $target.height() + 2;
-
-      this.inputValue.css(cssConfig).show().focus().select();
-    },
-
-    closeEditValue: function () {
-      var value = this.inputValue.val();
-
-      if (!value) {
-        this.model.set('value', '');
+      if (operator === 'regular_expression') {
+        numericValue.value = this.$('.custom-list-default__filter-form__numeric__edit-regex').val();
+      }
+      else if (operator === 'between' || operator === 'not between') {
+        numericValue.min = this.$('.custom-list-default__filter-form__numeric__edit-min').val();
+        numericValue.max = this.$('.custom-list-default__filter-form__numeric__edit-max').val();
       }
       else {
-        var valueParts = value.split(',');
-        var numericValue = {
-          min: '',
-          max: '',
-          value: ''
-        };
-
-        if (valueParts.length === 2) {
-          numericValue.min = valueParts[0].trim();
-          numericValue.max = valueParts[1].trim();
-        }
-        else {
-          numericValue.value = valueParts[0].trim();
-        }
-
-        this.model.set('value', JSON.stringify(numericValue));
+        numericValue.value = this.$('.custom-list-default__filter-form__numeric__edit-value').val();
       }
 
-      this.inputValue.hide();
-    },
-
-    updateValueOnEnter: function (e) {
-      if (e.keyCode === 13) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        this.closeEditValue();
-      }
+      this.model.set('value', JSON.stringify(numericValue));
     }
+
   });
 
 })(jQuery, _, Drupal, Backbone);

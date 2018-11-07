@@ -9,91 +9,88 @@
   Drupal.custom_list_default.filter_forms.Date = Backbone.View.extend({
     template: _.template(
       '<div class="custom-list-default__filter-form__date">' +
-      '  <span><%- tplGetValue(value) %></span>' +
-      '  <input class="custom-list-default__filter-form__date__edit-value" style="display: none;" type="text" value="<%- tplGetValue(value) %>" />' +
+      '  <%= tplGetFields(operator, value) %>' +
       '</div>'
     ),
 
     templateHelpers: {
-      tplGetValue: function (value) {
+      tplGetFields: function (operator, value) {
+        var inputElements = '';
+        var parsedValue = {};
+
         if (_.isEmpty(value)) {
-          return value;
-        }
-
-        var dateValue = JSON.parse(value);
-
-        if (dateValue.value) {
-          return dateValue.value;
+          parsedValue = {
+            value: '',
+            min: '',
+            max: ''
+          };
         }
         else {
-          return dateValue.min + ',' + dateValue.max;
+          parsedValue = JSON.parse(value);
         }
+
+        if (operator === 'regular_expression') {
+          inputElements += '<input class="custom-list-default__filter-form__date__edit-regex" type="text" value="' + parsedValue.value + '" />';
+        }
+        else if (operator === 'between' || operator === 'not between') {
+          var minDate = parsedValue.min.split(' ');
+          inputElements += '<input class="custom-list-default__filter-form__date__edit-min-date" type="date" value="' + (minDate[0] || '') + '" />';
+          inputElements += '<input class="custom-list-default__filter-form__date__edit-min-time" type="time" value="' + (minDate[1] || '') + '" />';
+
+          var maxDate = parsedValue.max.split(' ');
+          inputElements += '<input class="custom-list-default__filter-form__date__edit-max-date" type="date" value="' + (maxDate[0] || '') + '" />';
+          inputElements += '<input class="custom-list-default__filter-form__date__edit-max-time" type="time" value="' + (maxDate[1] || '') + '" />';
+        }
+        else {
+          var singleDate = parsedValue.value.split(' ');
+          inputElements += '<input class="custom-list-default__filter-form__date__edit-single-date" type="date" value="' + (singleDate[0] || '') + '" />';
+          inputElements += '<input class="custom-list-default__filter-form__date__edit-single-time" type="time" value="' + (singleDate[1] || '') + '" />';
+        }
+
+        return inputElements;
       }
     },
 
     events: {
-      'click span': 'editValue',
-      'keypress .custom-list-default__filter-form__date__edit-value': 'updateValueOnEnter',
-      'blur .custom-list-default__filter-form__date__edit-value': 'closeEditValue'
+      'blur .custom-list-default__filter-form__date__edit-regex': 'updateValue',
+      'blur .custom-list-default__filter-form__date__edit-min-date': 'updateValue',
+      'blur .custom-list-default__filter-form__date__edit-min-time': 'updateValue',
+      'blur .custom-list-default__filter-form__date__edit-max-date': 'updateValue',
+      'blur .custom-list-default__filter-form__date__edit-max-time': 'updateValue',
+      'blur .custom-list-default__filter-form__date__edit-single-date': 'updateValue',
+      'blur .custom-list-default__filter-form__date__edit-single-time': 'updateValue'
     },
 
     render: function () {
       var render = this.template(_.extend(this.model.toJSON(), this.templateHelpers));
       this.setElement(render);
 
-      this.inputValue = this.$('.custom-list-default__filter-form__date__edit-value');
-
       return this;
     },
 
-    editValue: function (event) {
-      var $target = $(event.target);
+    updateValue: function () {
+      var operator = this.model.get('operator');
+      var dateValue = {
+        min: '',
+        max: '',
+        value: '',
+        type: 'date'
+      };
 
-      var cssConfig = $target.position();
-      cssConfig.top = cssConfig.top - 1;
-      cssConfig.width = $target.width();
-      cssConfig.height = $target.height() + 2;
-
-      this.inputValue.css(cssConfig).show().focus().select();
-    },
-
-    closeEditValue: function () {
-      var value = this.inputValue.val();
-
-      if (!value) {
-        this.model.set('value', '');
+      if (operator === 'regular_expression') {
+        dateValue.value = this.$('.custom-list-default__filter-form__date__edit-regex').val();
+      }
+      else if (operator === 'between' || operator === 'not between') {
+        dateValue.min = this.$('.custom-list-default__filter-form__date__edit-min-date').val() + ' ' + this.$('.custom-list-default__filter-form__date__edit-min-time').val();
+        dateValue.max = this.$('.custom-list-default__filter-form__date__edit-max-date').val() + ' ' + this.$('.custom-list-default__filter-form__date__edit-max-time').val();
       }
       else {
-        var valueParts = value.split(',');
-        var dateValue = {
-          min: '',
-          max: '',
-          value: '',
-          type: 'date'
-        };
-
-        if (valueParts.length === 2) {
-          dateValue.min = valueParts[0].trim();
-          dateValue.max = valueParts[1].trim();
-        }
-        else {
-          dateValue.value = valueParts[0].trim();
-        }
-
-        this.model.set('value', JSON.stringify(dateValue));
+        dateValue.value = this.$('.custom-list-default__filter-form__date__edit-single-date').val() + ' ' + this.$('.custom-list-default__filter-form__date__edit-single-time').val();
       }
 
-      this.inputValue.hide();
-    },
-
-    updateValueOnEnter: function (e) {
-      if (e.keyCode === 13) {
-        e.stopPropagation();
-        e.preventDefault();
-
-        this.closeEditValue();
-      }
+      this.model.set('value', JSON.stringify(dateValue));
     }
+
   });
 
 })(jQuery, _, Drupal, Backbone);

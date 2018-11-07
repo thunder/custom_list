@@ -18,7 +18,6 @@ filter_selector:
   js:
     js/models/FilterModel.js: {}
     js/filter_forms/NoneFilterForm.js: {}
-    js/filter_forms/SingleValueFilterForm.js: {}
     js/filter_forms/StringFilterForm.js: {}
     js/filter_forms/BooleanFilterForm.js: {}
     js/filter_forms/LanguageFilterForm.js: {}
