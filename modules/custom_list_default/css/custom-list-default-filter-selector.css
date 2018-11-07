@@ -64,19 +64,19 @@
 .custom-list-default__filter-form__boolean span,
 .custom-list-default__filter-form__language span,
 .custom-list-default__filter-form__taxonomy span,
-.custom-list-default__filter-form__user span,
-.custom-list-default__filter-form__numeric span,
-.custom-list-default__filter-form__date span {
+.custom-list-default__filter-form__user span {
+  flex: 1;
+}
+
+.custom-list-default__filter-form__numeric input,
+.custom-list-default__filter-form__date input {
   flex: 1;
 }
 
 .custom-list-default__filter-form__string__edit-value,
-.custom-list-default__filter-form__boolean__edit-value,
 .custom-list-default__filter-form__language__edit-value,
 .custom-list-default__filter-form__taxonomy__edit-value,
-.custom-list-default__filter-form__user__edit-value,
-.custom-list-default__filter-form__numeric__edit-value,
-.custom-list-default__filter-form__date__edit-value {
+.custom-list-default__filter-form__user__edit-value {
   display: block;
   position: absolute;
   z-index: 1001;

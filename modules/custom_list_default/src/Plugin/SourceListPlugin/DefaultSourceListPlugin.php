@@ -700,9 +700,6 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
     $column_info = explode('.', $filter_info['filter_id']);
 
     $filter = $this->getFilterOption($column_info[0], $column_info[1]);
-
-    // In order to find does filter support array formatted values or only
-    // single value, we have to do some unconventional checks.
     $filter['value'] = json_decode($filter_info['value'], TRUE);
     $filter['operator'] = $filter_info['operator'];
 

@@ -18,7 +18,7 @@
    *
    * @type {object}
    */
-  Drupal.behaviors.loadCustomListSortSelector = {
+  Drupal.behaviors.loadDefaultCustomListSortSelector = {
     attach: function (context) {
       // Some times we have issue with detached context.
       if (document !== context && !$.contains(document, context)) {

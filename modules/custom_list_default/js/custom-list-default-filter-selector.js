@@ -19,7 +19,7 @@
    * @type {object}
    */
 
-  Drupal.behaviors.loadCustomListFilterSelector = {
+  Drupal.behaviors.loadDefaultCustomListFilterSelector = {
     attach: function (context) {
       // Some times we have issue with detached context.
       if (document !== context && !$.contains(document, context)) {
