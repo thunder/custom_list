@@ -416,6 +416,9 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
 
     $view_config = $source_list_plugin->generateConfiguration('view', $custom_list_config);
 
+    // We need invalidation if source_list is changed.
+    $view_config['display']['custom_list_block']['cache_metadata']['tags'][] = sprintf('source_list:%s', $source_list->id());
+
     $view = new View($view_config, 'view');
     return $view->getExecutable()->render('custom_list_block');
   }
