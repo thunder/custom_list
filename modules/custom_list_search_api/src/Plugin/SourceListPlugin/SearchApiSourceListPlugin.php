@@ -242,6 +242,7 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
             'style' => [
               'type' => 'custom_list_search_api',
               'options' => [
+                "default_row_class" => TRUE,
                 'insertions' => $custom_list_config['insertions'],
                 'unique_entities' => $custom_list_config['unique_entities'],
               ],
