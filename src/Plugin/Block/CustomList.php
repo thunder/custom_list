@@ -9,6 +9,7 @@ use Drupal\Component\Serialization\Json;
 use Drupal\Core\Ajax\AjaxResponse;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -415,6 +416,9 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     }
 
     $view_config = $source_list_plugin->generateConfiguration('view', $custom_list_config);
+
+    // We need invalidation if source_list is changed.
+    $view_config['display']['custom_list_block']['cache_metadata']['tags'] = Cache::mergeTags($view_config['display']['custom_list_block']['cache_metadata']['tags'], $source_list->getCacheTags());
 
     $view = new View($view_config, 'view');
     return $view->getExecutable()->render('custom_list_block');
