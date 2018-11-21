@@ -61,9 +61,23 @@
                 view_mode: 'default'
               }
             });
+
+            // We want to get always just new selected entities with every use
+            // of entity browser, that's why we have to clear selected entites
+            // after processing them.
+            $entityBrowserElement.val('');
           });
         });
       }
+
+      // There is some strange behaviour in entity browser. It unbinds event for
+      // handling of selection change on triggering button.
+      var $entityBrowserOpenButton = $entityBrowserElement.prev().find('input[name="settings_custom_list_config_form_insertions_entity_browser_selector_entity_browser"]').once('custom-list-rebind-eb-events');
+      $entityBrowserOpenButton.on('click', function () {
+        if (!$._data(this, 'events')['entities-selected']) {
+          jQuery(this).on('entities-selected', Drupal.entityBrowser.selectionCompleted);
+        }
+      });
 
       // Register handler for adding a block to insertion list.
       var $addButton = $(context).find('.custom-list__add-block').once('load-custom-list-insert-add-block');
