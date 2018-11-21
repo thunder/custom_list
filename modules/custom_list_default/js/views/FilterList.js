@@ -95,7 +95,7 @@
       var me = this;
       var value = $(event.target).val();
 
-      this.model.set({
+      me.model.set({
         filter_id: value,
         value: ''
       });
