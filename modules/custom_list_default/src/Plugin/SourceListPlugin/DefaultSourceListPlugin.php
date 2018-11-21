@@ -221,22 +221,24 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
 
     $filter_options = [];
     foreach ($options as $option_id => $option) {
-      if (strpos($option_id, $data_table . '.') !== 0) {
-        continue;
-      }
-
       $field_info = explode('.', $option_id);
       if (in_array($field_info[1], $skip_fields)) {
         continue;
       }
 
-      $filter_options[$option_id] = $this->getFilterOption($field_info[0], $field_info[1]);
+      $filter_option = $this->getFilterOption($field_info[0], $field_info[1]);
+      $handler = $this->getFilterHandler($filter_option);
+      $filter_form_info = $filter_form_resolver->getFormInfo($handler);
 
-      $handler = $this->getFilterHandler($filter_options[$option_id]);
+      // Filtering of not available frontend filter widgets.
+      if (empty($filter_form_info)) {
+        continue;
+      }
+
+      $filter_options[$option_id] = $filter_option;
       $filter_options[$option_id]['operators'] = $handler->operatorOptions();
-
       $filter_options[$option_id]['title'] = isset($handler->definition['title']) ? $handler->definition['title'] : $option_id;
-      $filter_options[$option_id]['form_info'] = $filter_form_resolver->getFormInfo($handler);
+      $filter_options[$option_id]['form_info'] = $filter_form_info;
     }
 
     return $filter_options;

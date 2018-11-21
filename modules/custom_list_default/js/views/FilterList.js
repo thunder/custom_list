@@ -95,8 +95,10 @@
       var me = this;
       var value = $(event.target).val();
 
-      me.model.set('filter_id', value);
-      me.model.set('value', '');
+      this.model.set({
+        filter_id: value,
+        value: ''
+      });
 
       // Get first operator for selected field ID.
       $.each(me.templateHelpers.filterOptions.filter[value].operators, function (operator_id) {
@@ -111,8 +113,10 @@
     changeOperator: function (event) {
       var value = $(event.target).val();
 
-      this.model.set('operator', value);
-      this.model.set('value', '');
+      this.model.set({
+        operator: value,
+        value: ''
+      });
 
       this.model.trigger('change', this.model);
     },
