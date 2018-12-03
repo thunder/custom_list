@@ -22,6 +22,7 @@ class FilterFormResolver implements FilterFormResolverInterface {
     'date' => 'Date',
     'user_name' => 'User',
     'taxonomy_index_tid_depth' => 'Taxonomy',
+    'taxonomy_index_tid' => 'Taxonomy',
   ];
 
   /**
