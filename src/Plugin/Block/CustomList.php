@@ -70,6 +70,13 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
   protected $sourceListViewModes = [];
 
   /**
+   * The list of default view modes for source list IDs.
+   *
+   * @var array
+   */
+  protected $sourceListDefaultViewMode = [];
+
+  /**
    * The config factory service.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
@@ -154,7 +161,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     // Get preselection for the form.
     $base_preselection = [
       'source_list' => key($source_lists),
-      'view_mode' => 'default',
+      'view_mode' => $this->getDefaultViewMode(key($source_lists)),
       'unique_entities' => TRUE,
       'limit' => 5,
       'insertions' => [],
@@ -167,6 +174,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       }
     }
 
+    $forced_view_mode = '';
     $form_preselection = [];
     if ($form_state->isProcessingInput()) {
       $this->setSelectedSourceList($form_state);
@@ -174,6 +182,9 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       $source_list_state = $form_state->get('source_list');
       if (!empty($source_list_state)) {
         $form_preselection['source_list'] = $source_list_state;
+
+        // A new value for view mode should be default view.
+        $forced_view_mode = $this->getDefaultViewMode($source_list_state);
       }
     }
 
@@ -224,6 +235,12 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       '#options' => $options['view_mode'],
       '#default_value' => $preselection['view_mode'],
     ];
+
+    // In order to change default selection of view mode after selecting a new
+    // source list, we have to set selection list value.
+    if (!empty($forced_view_mode)) {
+      $custom_list_config_form['view_mode']['#value'] = $forced_view_mode;
+    }
 
     // Number of elements that will be displayed.
     $custom_list_config_form['limit'] = [
@@ -313,22 +330,8 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       return $this->sourceListViewModes[$source_list_id];
     }
 
-    try {
-      /** @var \Drupal\custom_list\Entity\SourceListEntity $source_list */
-      $source_list = $this->getSourceList($source_list_id);
-    }
-    catch (InvalidPluginDefinitionException $e) {
-      return $view_mode_list;
-    }
-    catch (PluginNotFoundException $e) {
-      return $view_mode_list;
-    }
-
-    try {
-      /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $plugin */
-      $plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig());
-    }
-    catch (PluginException $e) {
+    $source_list_plugin = $this->getSourceListPlugin($source_list_id);
+    if (empty($source_list_plugin)) {
       return $view_mode_list;
     }
 
@@ -337,7 +340,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     // provided by source list.
     $view_modes = [];
     $uninitialized_view_modes = TRUE;
-    $entity_type_infos = $plugin->getEntityTypeInfo();
+    $entity_type_infos = $source_list_plugin->getEntityTypeInfo();
     foreach ($entity_type_infos as $entity_type_info) {
       $bundle_view_modes = $this->displayRepository->getViewModeOptionsByBundle($entity_type_info['entity_type'], $entity_type_info['bundle']);
 
@@ -361,6 +364,57 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
   }
 
   /**
+   * Get default view mode for source list entity type(s).
+   *
+   * @param string $source_list_id
+   *   The source list ID.
+   *
+   * @return string
+   *   Returns default view mode for provided source list.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   */
+  protected function getDefaultViewMode($source_list_id) {
+    $default_view_mode = 'default';
+
+    // When source list is not provided, we will use "default" view mode.
+    if (empty($source_list_id)) {
+      return $default_view_mode;
+    }
+
+    // Check first already processed source lists.
+    if (isset($this->sourceListDefaultViewMode[$source_list_id])) {
+      return $this->sourceListDefaultViewMode[$source_list_id];
+    }
+
+    $this->sourceListDefaultViewMode[$source_list_id] = $default_view_mode;
+    $source_list_plugin = $this->getSourceListPlugin($source_list_id);
+    if (empty($source_list_plugin)) {
+      return $this->sourceListDefaultViewMode[$source_list_id];
+    }
+
+    // Use default view mode only in case one entity type is provided by the
+    // source list.
+    $entity_type_infos = $source_list_plugin->getEntityTypeInfo();
+    if (empty($entity_type_infos) || count($entity_type_infos) > 1) {
+      return $this->sourceListDefaultViewMode[$source_list_id];
+    }
+
+    // Get default view mode from the entity bundle configuration.
+    $entity_type_info = $entity_type_infos[0];
+    $entity_definition = $this->entityTypeManager->getDefinition($entity_type_info['entity_type']);
+    $bundle_configuration = $this->entityTypeManager->getStorage($entity_definition->getBundleEntityType())
+      ->load($entity_type_info['bundle']);
+    $default_view_mode_settings = $bundle_configuration->getThirdPartySettings('custom_list', 'default_view_mode');
+    if (!empty($default_view_mode_settings)) {
+      $this->sourceListDefaultViewMode[$source_list_id] = $default_view_mode_settings['default_view_mode'];
+    }
+
+    return $this->sourceListDefaultViewMode[$source_list_id];
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
@@ -379,35 +433,10 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
    */
   public function build() {
     $custom_list_config = $this->configuration['custom_list'];
+    $source_list_id = $custom_list_config['source_list'];
 
-    /** @var \Drupal\custom_list\Entity\SourceListEntityInterface $source_list */
-    try {
-      $source_list = $this->getSourceList($custom_list_config['source_list']);
-    }
-    catch (InvalidPluginDefinitionException $e) {
-      $this->logger->warning(sprintf('The plugin definition for source list (ID: %s) is not found.', $custom_list_config['source_list']));
-
-      return [];
-    }
-    catch (PluginNotFoundException $e) {
-      $this->logger->warning(sprintf('The plugin for source list (ID: %s) is not found.', $custom_list_config['source_list']));
-
-      return [];
-    }
-
-    if (empty($source_list)) {
-      $this->logger->warning(sprintf('The source list (ID: %s) is not available.', $custom_list_config['source_list']));
-
-      return [];
-    }
-
-    /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $source_list_plugin */
-    try {
-      $source_list_plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig());
-    }
-    catch (PluginException $e) {
-      $this->logger->warning(sprintf('Unable to render the block, because the plugin for source list (ID: %s) is not available.', $source_list->id()));
-
+    $source_list_plugin = $this->getSourceListPlugin($source_list_id);
+    if (empty($source_list_plugin)) {
       return [];
     }
 
@@ -418,7 +447,7 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     $view_config = $source_list_plugin->generateConfiguration('view', $custom_list_config);
 
     // We need invalidation if source_list is changed.
-    $view_config['display']['custom_list_block']['cache_metadata']['tags'] = Cache::mergeTags($view_config['display']['custom_list_block']['cache_metadata']['tags'], $source_list->getCacheTags());
+    $view_config['display']['custom_list_block']['cache_metadata']['tags'] = Cache::mergeTags($view_config['display']['custom_list_block']['cache_metadata']['tags'], $this->getSourceList($source_list_id)->getCacheTags());
 
     $view = new View($view_config, 'view');
     return $view->getExecutable()->render('custom_list_block');
@@ -538,22 +567,6 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
   }
 
   /**
-   * Get source list entity.
-   *
-   * @param string $source_list_id
-   *   Source list ID.
-   *
-   * @return \Drupal\custom_list\Entity\SourceListEntityInterface
-   *   Return source list entity.
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
-   */
-  protected function getSourceList($source_list_id) {
-    return $this->entityTypeManager->getStorage('source_list')->load($source_list_id);
-  }
-
-  /**
    * Get all available source list entities for selection.
    *
    * @return array
@@ -588,6 +601,72 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
     }
 
     return $source_lists;
+  }
+
+  /**
+   * Get source list entity.
+   *
+   * @param int $source_list_id
+   *   The source list ID.
+   *
+   * @return \Drupal\custom_list\Entity\SourceListEntity
+   *   Returns null or instance of source list.
+   */
+  protected function getSourceList($source_list_id) {
+    /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $plugin */
+    $source_list = NULL;
+
+    try {
+      /** @var \Drupal\custom_list\Entity\SourceListEntity $source_list */
+      $source_list = $this->entityTypeManager->getStorage('source_list')
+        ->load($source_list_id);
+
+      if (empty($source_list)) {
+        $this->logger->warning("The source list (ID: {$source_list_id}) is not available.");
+
+        return NULL;
+      }
+    }
+    catch (InvalidPluginDefinitionException $e) {
+      $this->logger->warning("The plugin definition for source list (ID: {$source_list_id}) is not found.");
+    }
+    catch (PluginNotFoundException $e) {
+      $this->logger->warning("The plugin for source list (ID: {$source_list_id}) is not found.");
+    }
+
+    return $source_list;
+  }
+
+  /**
+   * Get plugin instance for source list.
+   *
+   * @param int $source_list_id
+   *   The source list ID.
+   *
+   * @return \Drupal\custom_list\Plugin\SourceListPluginInterface
+   *   Returns null or instance of plugin.
+   */
+  protected function getSourceListPlugin($source_list_id) {
+    /** @var \Drupal\custom_list\Plugin\SourceListPluginInterface $plugin */
+    $plugin = NULL;
+
+    try {
+      /** @var \Drupal\custom_list\Entity\SourceListEntity $source_list */
+      $source_list = $this->getSourceList($source_list_id);
+
+      if (empty($source_list)) {
+        $this->logger->warning("The source list (ID: {$source_list_id}) is not available.");
+
+        return NULL;
+      }
+
+      $plugin = $this->sourceListPluginManager->createInstance($source_list->getPluginId(), $source_list->getConfig());
+    }
+    catch (PluginException $e) {
+      $this->logger->warning("The plugin for source list (ID: {$source_list_id}) is not available.");
+    }
+
+    return $plugin;
   }
 
 }

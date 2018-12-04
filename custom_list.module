@@ -1,0 +1,79 @@
+<?php
+
+/**
+ * @file
+ * Contains hooks for custom list module.
+ */
+
+use Drupal\Core\Config\Entity\ConfigEntityType;
+use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * The hook function for the hook_form_alter().
+ */
+function custom_list_form_alter(array &$form, FormStateInterface $form_state) {
+  /** @var \Drupal\Core\Entity\EntityForm $form_object */
+  $form_object = $form_state->getFormObject();
+  if (!$form_object instanceof EntityForm) {
+    return;
+  }
+
+  /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $entity */
+  $entity = $form_object->getEntity();
+  $entity_type = $entity->getEntityType();
+  if (!$entity_type instanceof ConfigEntityType) {
+    return;
+  }
+
+  $bundle_of = $entity_type->getBundleOf();
+  if (empty($bundle_of)) {
+    return;
+  }
+
+  /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
+  $display_repository = Drupal::service('entity_display.repository');
+  $view_modes = $display_repository->getViewModeOptionsByBundle($bundle_of, $entity->id());
+  if (empty($view_modes) || count($view_modes) <= 1) {
+    return;
+  }
+
+  // After we have ensured there are at least two or more view modes for this
+  // entity type (and bundle), we can create form for saving default view mode.
+  $form['custom_list'] = [
+    '#type' => 'details',
+    '#title' => t('Custom list'),
+    '#weight' => 99,
+    '#group' => 'additional_settings',
+  ];
+
+  $form['custom_list']['default_view_mode'] = [
+    '#type' => 'select',
+    '#title' => t('Default view mode'),
+    '#default_value' => $entity->getThirdPartySetting('custom_list', 'default_view_mode', ['default']),
+    '#options' => $view_modes,
+    '#description' => t('The view mode that will be used as default for source list rendering.'),
+  ];
+
+  $form['actions']['submit']['#submit'][] = 'custom_list_form_submit_handler';
+}
+
+/**
+ * The callback handler for form submitting to save 3rd party data.
+ *
+ * We have extensive checks at form creation, where this handler is registered
+ * for use on form submitting. That's why, there is no need to make all checking
+ * again.
+ *
+ * @see hook_form_alter()
+ */
+function custom_list_form_submit_handler(&$form, FormStateInterface $form_state) {
+  /** @var \Drupal\Core\Entity\EntityForm $form_object */
+  $form_object = $form_state->getFormObject();
+
+  /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $entity */
+  $entity = $form_object->getEntity();
+
+  $entity->setThirdPartySetting('custom_list', 'default_view_mode', $form_state->getValue('default_view_mode'));
+  $entity->save();
+}
