@@ -13,3 +13,23 @@ sort_selector:
       css/custom-list-default-sort-selector.css: {}
   dependencies:
     - custom_list_default/base
+
+filter_selector:
+  js:
+    js/models/FilterModel.js: {}
+    js/filter_forms/NoneFilterForm.js: {}
+    js/filter_forms/StringFilterForm.js: {}
+    js/filter_forms/BooleanFilterForm.js: {}
+    js/filter_forms/LanguageFilterForm.js: {}
+    js/filter_forms/TaxonomyFilterForm.js: {}
+    js/filter_forms/UserFilterForm.js: {}
+    js/filter_forms/NumericFilterForm.js: {}
+    js/filter_forms/DateFilterForm.js: {}
+    js/views/FilterList.js: {}
+    js/views/FilterForm.js: {}
+    js/custom-list-default-filter-selector.js: {}
+  css:
+    component:
+      css/custom-list-default-filter-selector.css: {}
+  dependencies:
+  - custom_list_default/base

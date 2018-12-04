@@ -25,26 +25,39 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
    *
    * @var array
    */
-  protected $supportedEntityTypes = [
+  protected static $supportedEntityTypes = [
     'node',
     'media',
   ];
 
   /**
+   * Keeps views data information per table.
+   *
+   * @var array
+   */
+  protected $viewsData = [];
+
+  /**
    * {@inheritdoc}
    */
-  public function getForm() {
+  public function getForm(array $form, FormStateInterface $form_state) {
     // Sub-form will be created for custom list form.
     $custom_list_config_form = [];
 
     // Get pre-selections.
     $preselected_content_type = (!empty($this->configuration['content_type'])) ? $this->configuration['content_type'] : 'node:article';
+    if ($form_state->getValue('content_type')) {
+      $preselected_content_type = $form_state->getValue('content_type');
+    }
+
     $preselected_sorts = (!empty($this->configuration['sort_selection'])) ? $this->configuration['sort_selection'] : [];
+    $preselected_filters = (!empty($this->configuration['filter_selection'])) ? $this->configuration['filter_selection'] : [];
 
     // Get all available options.
     $options = [
       'content_type' => $this->getContentOptions(),
       'sort' => $this->getSortOptions($preselected_content_type),
+      'filter' => $this->getFilterOptions($preselected_content_type),
     ];
 
     $custom_list_config_form['options'] = [
@@ -74,9 +87,23 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
         ],
       ],
       '#attached' => [
-
         'library' => [
           'custom_list_default/sort_selector',
+        ],
+      ],
+    ];
+
+    $custom_list_config_form['filter_selection'] = [
+      '#type' => 'hidden',
+      '#default_value' => json_encode($preselected_filters),
+      '#attributes' => [
+        'class' => [
+          'custom-list-default__default-source-list-plugin__filter_selection',
+        ],
+      ],
+      '#attached' => [
+        'library' => [
+          'custom_list_default/filter_selector',
         ],
       ],
     ];
@@ -109,7 +136,7 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
 
     $bundles = $bundle_info_service->getAllBundleInfo();
     foreach ($bundles as $entity_type_id => $bundle_infos) {
-      if (in_array($entity_type_id, $this->supportedEntityTypes)) {
+      if (in_array($entity_type_id, static::$supportedEntityTypes)) {
         foreach ($bundle_infos as $bundle_id => $bundle_info) {
           $content_options[$entity_type_id . ':' . $bundle_id] = $bundle_info['label'];
         }
@@ -166,6 +193,124 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
   }
 
   /**
+   * Get filtering options.
+   *
+   * @param string $content_type
+   *   Content type in format of entity_type_id:bundle.
+   *
+   * @return array
+   *   Return filtering options.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   */
+  protected function getFilterOptions($content_type) {
+    $type_info = $this->getTypeInfo($content_type);
+
+    $data_table = $type_info->getDataTable();
+    $options = Views::viewsDataHelper()->fetchFields([$data_table], 'filter');
+
+    /** @var \Drupal\custom_list_default\FilterFormResolverInterface $filter_form_resolver */
+    $filter_form_resolver = \Drupal::service('custom_list_default.filter_form_resolver');
+
+    // Status, bundle and custom list filters are programmatically added.
+    $skip_fields = [
+      'custom_list_default',
+      $type_info->getKey('bundle'),
+      $type_info->getKey('published'),
+    ];
+
+    $filter_options = [];
+    foreach ($options as $option_id => $option) {
+      $field_info = explode('.', $option_id);
+      if (in_array($field_info[1], $skip_fields)) {
+        continue;
+      }
+
+      $filter_option = $this->getFilterOption($field_info[0], $field_info[1]);
+      $handler = $this->getFilterHandler($filter_option);
+      $filter_form_info = $filter_form_resolver->getFormInfo($handler);
+
+      // Filtering of not available frontend filter widgets.
+      if (empty($filter_form_info)) {
+        continue;
+      }
+
+      $filter_options[$option_id] = $filter_option;
+      $filter_options[$option_id]['operators'] = $handler->operatorOptions();
+      $filter_options[$option_id]['title'] = isset($handler->definition['title']) ? $handler->definition['title'] : $option_id;
+      $filter_options[$option_id]['form_info'] = $filter_form_info;
+    }
+
+    return $filter_options;
+  }
+
+  /**
+   * Get views data for table.
+   *
+   * @param string $table
+   *   The table name.
+   *
+   * @return array
+   *   Returns data for the table.
+   */
+  protected function getViewsData($table) {
+    if (!isset($this->viewsData[$table])) {
+      $this->viewsData[$table] = Views::viewsData()->get($table);
+    }
+
+    return $this->viewsData[$table];
+  }
+
+  /**
+   * Get information for single filter.
+   *
+   * @param string $table
+   *   The name of the table for filter.
+   * @param string $field
+   *   The name of the field for filter.
+   *
+   * @return array
+   *   Returns filter options.
+   */
+  public function getFilterOption($table, $field) {
+    $data = $this->getViewsData($table);
+
+    // Base filter configuration.
+    $filter_config = [
+      'id' => $table . '.' . $field,
+      'table' => $table,
+      'field' => $field,
+    ];
+
+    if (isset($data['table']['entity type'])) {
+      $filter_config['entity_type'] = $data['table']['entity type'];
+    }
+    if (isset($data[$field]['entity field'])) {
+      $filter_config['entity_field'] = $data[$field]['entity field'];
+    }
+
+    // Load the plugin ID if available.
+    if (isset($data[$field]['filter']['id'])) {
+      $filter_config['plugin_id'] = $data[$field]['filter']['id'];
+    }
+
+    return $filter_config;
+  }
+
+  /**
+   * Get filter configuration.
+   *
+   * @param array $filter_info
+   *   Filter info.
+   *
+   * @return \Drupal\views\Plugin\views\filter\FilterPluginBase
+   *   Returns filter handler.
+   */
+  public function getFilterHandler(array $filter_info) {
+    return Views::handlerManager('filter')->getHandler($filter_info, []);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getFormData(array $form, FormStateInterface $form_state) {
@@ -188,6 +333,7 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
 
     // Fetch sort selection.
     $source_list_plugin_config['sort_selection'] = json_decode($form_state->getValue('sort_selection'), TRUE);
+    $source_list_plugin_config['filter_selection'] = json_decode($form_state->getValue('filter_selection'), TRUE);
 
     return $source_list_plugin_config;
   }
@@ -293,7 +439,6 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
                 "view_mode" => $custom_list_config['view_mode'],
               ],
             ],
-            // TODO: Filters should be fully defined by UI.
             "filters" => [
               "type" => [
                 "id" => "type",
@@ -361,6 +506,12 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
     $sort_selection = isset($config['sort_selection']) ? $config['sort_selection'] : [];
     foreach ($sort_selection as $sort_info) {
       $this->appendSortOption($view_config['display']['default']['display_options']['sorts'], $sort_info, $content_info[0]);
+    }
+
+    // Add filters.
+    $filter_selection = isset($config['filter_selection']) ? $config['filter_selection'] : [];
+    foreach ($filter_selection as $filter_info) {
+      $this->appendFilterOption($view_config['display']['default']['display_options']['filters'], $filter_info);
     }
 
     return $view_config;
@@ -538,6 +689,24 @@ class DefaultSourceListPlugin extends SourceListPluginBase {
       "entity_field" => $column_info[1],
       "exposed" => FALSE,
     ];
+  }
+
+  /**
+   * Append filter option to existing view configuration array.
+   *
+   * @param array $filters
+   *   Existing list of filters as reference.
+   * @param array $filter_info
+   *   The filter info array.
+   */
+  protected function appendFilterOption(array &$filters, array $filter_info) {
+    $column_info = explode('.', $filter_info['filter_id']);
+
+    $filter = $this->getFilterOption($column_info[0], $column_info[1]);
+    $filter['value'] = json_decode($filter_info['value'], TRUE);
+    $filter['operator'] = $filter_info['operator'];
+
+    $filters[$filter_info['filter_id']] = $filter;
   }
 
 }

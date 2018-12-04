@@ -91,7 +91,7 @@ class SearchApiSourceListPlugin extends SourceListPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getForm() {
+  public function getForm(array $form, FormStateInterface $form_state) {
     // List of available Search API indexes.
     $list_of_indexes = $this->getListOfIndexes();
 

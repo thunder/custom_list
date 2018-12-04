@@ -1,0 +1,4 @@
+services:
+  custom_list_default.filter_form_resolver:
+    class: Drupal\custom_list_default\FilterFormResolver
+    arguments: []

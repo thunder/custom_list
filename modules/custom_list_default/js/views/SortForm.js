@@ -35,13 +35,15 @@
 
       this.list = this.$('.custom-list-default__sort-list');
 
-      this.sortOptions = JSON.parse($('.custom-list-default__default-source-list-plugin__options').val());
-
-      this.$el.html(this.template());
+      this.setElement(this.template());
 
       // Load existing data.
       var dataElement = $('.custom-list-default__default-source-list-plugin__sort_selection');
       this.collection.set(JSON.parse(dataElement.val()));
+    },
+
+    getSortOptions: function () {
+      return JSON.parse($('.custom-list-default__default-source-list-plugin__options').val());
     },
 
     addSort: function (event) {
@@ -49,7 +51,9 @@
       event.stopPropagation();
 
       var collection = this.collection;
-      $.each(this.sortOptions.sort, function (key) {
+      var sortOptions = this.getSortOptions();
+
+      $.each(sortOptions.sort, function (key) {
         collection.create({
           sort_id: key,
           order: 'DESC'
@@ -78,6 +82,21 @@
 
     addAll: function () {
       this.collection.each(this.addOne, this);
+    },
+
+    persistForm: function () {
+      $('.custom-list-default__default-source-list-plugin__sort_selection').val(this.collection.toJSON());
+    },
+
+    clearForm: function () {
+      var allModels = this.collection.models;
+      var i;
+
+      for (i = allModels.length - 1; i >= 0; i--) {
+        allModels[i].destroy();
+      }
+
+      this.persistForm();
     }
   });
 
