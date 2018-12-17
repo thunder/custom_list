@@ -5,7 +5,7 @@
  * Contains hooks for custom list module.
  */
 
-use Drupal\Core\Config\Entity\ConfigEntityType;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 
@@ -19,21 +19,25 @@ function custom_list_form_alter(array &$form, FormStateInterface $form_state) {
     return;
   }
 
-  /** @var \Drupal\Core\Config\Entity\ConfigEntityInterface $entity */
+  /** @var \Drupal\Core\Entity\Display\EntityViewDisplayInterface $entity */
   $entity = $form_object->getEntity();
-  $entity_type = $entity->getEntityType();
-  if (!$entity_type instanceof ConfigEntityType) {
+  if (!$entity instanceof EntityViewDisplayInterface) {
     return;
   }
 
-  $bundle_of = $entity_type->getBundleOf();
-  if (empty($bundle_of)) {
+  // Display custom list selection only on default view display mode form.
+  if ($entity->getMode() !== 'default') {
+    return;
+  }
+
+  $target_bundle = $entity->getTargetBundle();
+  if (empty($target_bundle)) {
     return;
   }
 
   /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $display_repository */
   $display_repository = Drupal::service('entity_display.repository');
-  $view_modes = $display_repository->getViewModeOptionsByBundle($bundle_of, $entity->id());
+  $view_modes = $display_repository->getViewModeOptionsByBundle($entity->getTargetEntityTypeId(), $target_bundle);
   if (empty($view_modes) || count($view_modes) <= 1) {
     return;
   }

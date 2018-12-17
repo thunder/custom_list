@@ -401,12 +401,10 @@ class CustomList extends BlockBase implements ContainerFactoryPluginInterface {
       return $this->sourceListDefaultViewMode[$source_list_id];
     }
 
-    // Get default view mode from the entity bundle configuration.
+    // Get default view mode from default display configuration.
     $entity_type_info = $entity_type_infos[0];
-    $entity_definition = $this->entityTypeManager->getDefinition($entity_type_info['entity_type']);
-    $bundle_configuration = $this->entityTypeManager->getStorage($entity_definition->getBundleEntityType())
-      ->load($entity_type_info['bundle']);
-    $default_view_mode_settings = $bundle_configuration->getThirdPartySettings('custom_list', 'default_view_mode');
+    $default_display_configuration = $this->entityTypeManager->getStorage('entity_view_display')->load("{$entity_type_info['entity_type']}.{$entity_type_info['bundle']}.default");
+    $default_view_mode_settings = $default_display_configuration->getThirdPartySettings('custom_list', 'default_view_mode');
     if (!empty($default_view_mode_settings)) {
       $this->sourceListDefaultViewMode[$source_list_id] = $default_view_mode_settings['default_view_mode'];
     }
