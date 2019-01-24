@@ -51,6 +51,11 @@
             var entityId = entityInfo[1];
             var entityType = entityInfo[0];
 
+            // Get selected view mode from form.
+            var viewMode = $entityBrowserElement.parent('form')
+              .find('*[name$="[custom_list_config_form][view_mode]"]')
+              .val();
+
             form.collection.create({
               position: form.collection.length,
               config: {
@@ -58,7 +63,7 @@
                 type: entityType,
                 name: entityType.substr(0, 1)
                   .toUpperCase() + entityType.substr(1) + ' (' + entityId + ')',
-                view_mode: 'default'
+                view_mode: viewMode
               }
             });
 
