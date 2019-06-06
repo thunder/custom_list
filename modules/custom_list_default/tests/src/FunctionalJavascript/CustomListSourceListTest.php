@@ -90,7 +90,7 @@ class CustomListSourceListTest extends CustomListJavascriptTestBase {
     $assert_session->assertWaitOnAjaxRequest();
 
     // Save new layout.
-    $this->pressButton('Save layout');
+    $page->pressButton('Save layout');
     $assert_session->assertWaitOnAjaxRequest();
 
     // Check that articles are listed on landing page.
