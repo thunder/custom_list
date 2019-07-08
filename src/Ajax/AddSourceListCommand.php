@@ -9,8 +9,18 @@ use Drupal\Core\Ajax\CommandInterface;
  */
 class AddSourceListCommand implements CommandInterface {
 
+  /**
+   * The source list ID.
+   *
+   * @var int
+   */
   protected $sourceListId;
 
+  /**
+   * The source list name.
+   *
+   * @var string
+   */
   protected $sourceListName;
 
   /**
