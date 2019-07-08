@@ -10,7 +10,7 @@ use Drupal\Component\Utility\NestedArray;
 class UniqueEntitiesStorage implements UniqueEntitiesStorageInterface {
 
   /**
-   * Th ID storage.
+   * The ID storage.
    *
    * @var array
    */
