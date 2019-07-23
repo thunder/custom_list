@@ -22,7 +22,7 @@
 
         var taxonomyValue = JSON.parse(value);
         for (var taxonomy in taxonomyValue) {
-          if (taxonomyValue.hasOwnProperty(taxonomy)) {
+          if (Object.prototype.hasOwnProperty.call(taxonomyValue, taxonomy)) {
             return taxonomy;
           }
         }

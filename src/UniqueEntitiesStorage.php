@@ -9,6 +9,11 @@ use Drupal\Component\Utility\NestedArray;
  */
 class UniqueEntitiesStorage implements UniqueEntitiesStorageInterface {
 
+  /**
+   * The ID storage.
+   *
+   * @var array
+   */
   protected static $storage = [];
 
   /**

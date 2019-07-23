@@ -22,7 +22,7 @@
 
         var languageValue = JSON.parse(value);
         for (var language in languageValue) {
-          if (languageValue.hasOwnProperty(language)) {
+          if (Object.prototype.hasOwnProperty.call(languageValue, language)) {
             return language;
           }
         }
